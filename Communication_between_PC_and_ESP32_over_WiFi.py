@@ -2,11 +2,12 @@ import socket
 import struct
 
 # Host IP and port
-HOST = '172.20.10.3'  # Replace with the host IP address
-PORT = 2024       # Arbitrary non-privileged port (>1024)
+HOST = '0.0.0.0'  # Replace with the host IP address
+PORT = 2022       # Arbitrary non-privileged port (>1024)
 
 # Create a TCP/IP socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 # Bind the socket to the port
 server_address = (HOST, PORT)
@@ -20,7 +21,7 @@ print(f"Server started. Listening on {HOST}:{PORT}")
 format_string = '<h50s'
 
 expected_size = struct.calcsize(format_string)
-
+audio_cmd = 'x'
 # Function to receive the exact number of bytes expected
 def receive_full_data(connection, size):
     data = b''
@@ -31,33 +32,51 @@ def receive_full_data(connection, size):
         data += packet
     return data
 
+def speechRecognition():
+    return 'l'
 
 def getImage():
-    return 5
+    return 'd'
 
+def getAudioCmd():
+    print(audio_cmd)
+    return audio_cmd
 
 # Main server loop
 #connection, client_address = server_socket.accept()
-while True:
-    # Wait for a connection
-    try:
-        #print("Connection from", client_address)
-        connection, client_address = server_socket.accept()
+def main(): 
+    while True:
+        # Wait for a connection
+        audio_cmd = speechRecognition()
+        try:
+            #print("Connection from", client_address)
+            connection, client_address = server_socket.accept()
 
-        # Receive data from the client
-        data = receive_full_data(connection, expected_size)
-        if len(data) == expected_size:
-            unpacked_data = struct.unpack(format_string, data)
-            status, text = unpacked_data
-            print(f"Received: status={status}, text={text.decode('utf-8').strip()}")
-        else:
-            print("Incomplete data received")
-         # Prepare response
-        num = "g"
-        response_data = struct.pack('<1s', num.encode('utf-8'))
-        connection.sendall(response_data)
-    except Exception as e:
-        print(f"Something went wrong: {e}")
-    finally:
-        # Clean up the connection
-        connection.close()
+            # Receive data from the client
+            data = receive_full_data(connection, expected_size)
+            if len(data) == expected_size:
+                unpacked_data = struct.unpack(format_string, data)
+                status, text = unpacked_data
+                print(f"Received: status={status}, text={text.decode('utf-8').strip()}")
+            else:
+                print("Incomplete data received")
+            
+            #Prepare response
+            if status == 5:
+                print("requesting image")
+                cmd = img_cmd
+            elif status == 4:
+                print("requesting audio")
+                cmd = audio_cmd
+            else:
+                cmd = 'x'
+            response_data = struct.pack('<1s', cmd.encode('utf-8'))
+            connection.sendall(response_data)
+        except Exception as e:
+            print(f"Something went wrong: {e}")
+        finally:
+            # Clean up the connection
+            connection.close()
+
+if __name__ == "__main__": 
+    main()
