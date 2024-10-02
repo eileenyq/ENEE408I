@@ -73,15 +73,44 @@ void readADC() {
   }
 }
 
+/*
+ *  Movement functions
+ */
+void M1_forward(int pwm_value) {
+  ledcWrite(M1_IN_1_CHANNEL, 0);
+  ledcWrite(M1_IN_2_CHANNEL, pwm_value);
+}
+void M2_forward(int pwm_value) {
+  ledcWrite(M2_IN_1_CHANNEL, 0);
+  ledcWrite(M2_IN_2_CHANNEL, pwm_value);
+}
+
+void M1_backward(int pwm_value) {
+  ledcWrite(M1_IN_1_CHANNEL, pwm_value);
+  ledcWrite(M1_IN_2_CHANNEL, 0);
+}
+void M2_backward(int pwm_value) {
+  ledcWrite(M2_IN_1_CHANNEL, pwm_value);
+  ledcWrite(M2_IN_2_CHANNEL, 0);
+}
+
+void M1_stop() {
+  ledcWrite(M1_IN_1_CHANNEL, PWM_MAX);
+  ledcWrite(M1_IN_2_CHANNEL, PWM_MAX);
+}
+void M2_stop() {
+  ledcWrite(M2_IN_1_CHANNEL, PWM_MAX);
+  ledcWrite(M2_IN_2_CHANNEL, PWM_MAX);
+}
+
 void rotateNDegrees2(int degrees) {
   float angleZ = 0;
   unsigned long previousTime = millis();
 
   //digitalWrite(M1_IN_1, HIGH);
-  ledcWrite(M1_IN_1_CHANNEL, 0);
-  ledcWrite(M1_IN_2_CHANNEL, 100);
-  ledcWrite(M2_IN_1_CHANNEL, 100);
-  ledcWrite(M2_IN_2_CHANNEL, 0);
+  M1_backward(100);
+  M2_forward(100);
+
   while (abs(angleZ) < degrees) {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
@@ -108,10 +137,9 @@ void rotateNDegrees1(int degrees) {
   float angleZ = 0;
   unsigned long previousTime = millis();
 
-  ledcWrite(M1_IN_1_CHANNEL, 100);
-  ledcWrite(M1_IN_2_CHANNEL, 0);
-  ledcWrite(M2_IN_1_CHANNEL, 0);
-  ledcWrite(M2_IN_2_CHANNEL, 100);
+  M1_forward(100);
+  M2_backward(100);
+
   while (abs(angleZ) < degrees) {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
@@ -183,38 +211,6 @@ float getPosition(/* Arguments */) {
   }
 }
 
-/*
- *  Movement functions
- */
-void M1_forward(int pwm_value) {
-  ledcWrite(M1_IN_1_CHANNEL, 0);
-  ledcWrite(M1_IN_2_CHANNEL, pwm_value);
-}
-void M2_forward(int pwm_value) {
-  ledcWrite(M2_IN_1_CHANNEL, 0);
-  ledcWrite(M2_IN_2_CHANNEL, pwm_value);
-  delay(100);
-  M1_stop();
-  M2_stop();
-}
-
-void M1_backward(int pwm_value) {
-  ledcWrite(M1_IN_1_CHANNEL, pwm_value);
-  ledcWrite(M1_IN_2_CHANNEL, 0);
-}
-void M2_backward(int pwm_value) {
-  ledcWrite(M2_IN_1_CHANNEL, pwm_value);
-  ledcWrite(M2_IN_2_CHANNEL, 0);
-}
-
-void M1_stop() {
-  ledcWrite(M1_IN_1_CHANNEL, PWM_MAX);
-  ledcWrite(M1_IN_2_CHANNEL, PWM_MAX);
-}
-void M2_stop() {
-  ledcWrite(M2_IN_1_CHANNEL, PWM_MAX);
-  ledcWrite(M2_IN_2_CHANNEL, PWM_MAX);
-}
 
 bool allBlack(){
   for (int i = 0; i < 13; i++) {
@@ -397,7 +393,8 @@ void loop() {
   int leftWheelPWM = 0;
   float pos = 0;
   while(true) {
-
+    M1_forward(120);
+    M2_forward(80);
     readADC();
     digitalConvert();
     delay(1);
@@ -434,55 +431,55 @@ void loop() {
     int side = isCorner();
     Serial.print("side");
     Serial.print(side);
-    if(side == 1) {
-      M1_forward(150);
-      M2_forward(150);
-      delay(500);
-      rotateNDegrees1(60);
-      delay(500);
-    } else if (side == 2) {
-      M1_forward(150);
-      M2_forward(150);
-      delay(500);
-      rotateNDegrees2(60);
-      delay(500);
-    } else if (side == 3) {
-      //all white
-      delay(1000);
-      M1_forward(150);
-      M2_forward(150);
-      delay(1000);
-      readADC();
-      digitalConvert();
-      if (allWhite()) {
-        //still all white, we turn
-        rotateNDegrees2(60); //turns right 
-        //check if we are in box
-        delay(1000);
-        followBox();
-      } else {
-        rotateNDegrees2(60);
-      }
-      delay(500);
-    } else if(side == 4) {
-      //all black 
-      delay(1000);
-      M1_forward(150);
-      M2_forward(150);
-      delay(1000);
-      rotateNDegrees2(60);
-      delay(2000);
-    } else {
-      if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
-        rightWheelPWM = 0;
-        leftWheelPWM = 0;
-      } else {
-        rightWheelPWM = basePWM + u; //positive error
-        leftWheelPWM = basePWM - u;
-      }
-    }
+    // if(side == 1) {
+    //   M1_forward(150);
+    //   M2_forward(150);
+    //   delay(500);
+    //   rotateNDegrees1(60);
+    //   delay(500);
+    // } else if (side == 2) {
+    //   M1_forward(150);
+    //   M2_forward(150);
+    //   delay(500);
+    //   rotateNDegrees2(60);
+    //   delay(500);
+    // } else if (side == 3) {
+    //   //all white
+    //   delay(1000);
+    //   M1_forward(150);
+    //   M2_forward(150);
+    //   delay(1000);
+    //   readADC();
+    //   digitalConvert();
+    //   if (allWhite()) {
+    //     //still all white, we turn
+    //     rotateNDegrees2(60); //turns right 
+    //     //check if we are in box
+    //     delay(1000);
+    //     followBox();
+    //   } else {
+    //     rotateNDegrees2(60);
+    //   }
+    //   delay(500);
+    // } else if(side == 4) {
+    //   //all black 
+    //   delay(1000);
+    //   M1_forward(150);
+    //   M2_forward(150);
+    //   delay(1000);
+    //   rotateNDegrees2(60);
+    //   delay(2000);
+    // } else {
+    //   if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
+    //     rightWheelPWM = 0;
+    //     leftWheelPWM = 0;
+    //   } else {
+    //     rightWheelPWM = basePWM + u; //positive error
+    //     leftWheelPWM = basePWM - u;
+    //   }
+    // }
     
-    M1_forward(leftWheelPWM);
-    M2_forward(rightWheelPWM);
+    // M1_forward(rightWheelPWM);
+    // M2_forward(leftWheelPWM);
   }
 }
