@@ -218,7 +218,7 @@ void M2_stop() {
 
 bool allBlack(){
   for (int i = 0; i < 13; i++) {
-    if (lineArray[i] != 0) {
+    if (lineArray[i] != 0) { // == 1
       return false;
     }
   }
@@ -369,23 +369,61 @@ void setup() {
   }
 }
 
-void followBox() {
+void followRightEdge() {
   //this code follows along the box counter clockwise
   readADC();
   digitalConvert();
 
-  while (isCorner() == 1) {
+  // while (isCorner() == 1) {
+  //   readADC();
+  //   digitalConvert();
+  //   M1_forward(100);
+  //   M2_forward(100);
+  //   Serial.print("in corner !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+  // } 
+  prev_e = 0;
+  int u = 0;
+  int rightWheelPWM = 0;
+  int leftWheelPWM = 0;
+  float pos = 0;
+  while(true) {
+    int pos; 
     readADC();
     digitalConvert();
-    M1_forward(100);
-    M2_forward(100);
-    Serial.print("in corner !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-  } 
-  M1_forward(150);
-  M2_forward(150);
+    delay(1);
+    if (allBlack()) {
+      break;
+    }
+    pos = getPosition(/* Arguments */);
+    e = 1.5 - pos; // mid - pos , use 6.5 for other way 
+    d_e = (e - prev_e); 
+    total_e= total_e + e;
+    prev_e = e;
+    Serial.println("in box");
+    Serial.print(", e:");
+    Serial.print(e);
+    Serial.print(", prev_e:");
+    Serial.print(prev_e);
+    Serial.print(", d_e:");
+    Serial.print(d_e);
+    Serial.print(", total_e:");
+    Serial.print(total_e);
+    Serial.print(", u:");
+    Serial.print(u);
+    // Implement PID control (include safeguards for when the PWM values go below 0 or exceed maximum)
+    u = Kp*e + Ki*total_e + Kd*d_e;
+    int basePWM = 80;
+    if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
+        rightWheelPWM = 0;
+        leftWheelPWM = 0;
+      } else {
+        rightWheelPWM = basePWM + u; //positive error
+        leftWheelPWM = basePWM - u;
+      }
+    M1_forward(leftWheelPWM);
+    M2_forward(rightWheelPWM);
+  }
   delay(1000);
-  rotateNDegrees1(60);
-  
 }
 
 void loop() {
@@ -459,19 +497,21 @@ void loop() {
         rotateNDegrees2(60); //turns right 
         //check if we are in box
         delay(1000);
-        followBox();
+        followRightEdge();
       } else {
         rotateNDegrees2(60);
       }
       delay(500);
     } else if(side == 4) {
       //all black 
-      delay(1000);
-      M1_forward(150);
-      M2_forward(150);
-      delay(1000);
-      rotateNDegrees2(60);
-      delay(2000);
+      // delay(1000);
+      // M1_forward(150);
+      // M2_forward(150);
+      // delay(1000);
+      // rotateNDegrees2(60);
+      // delay(2000);
+      rightWheelPWM = 0;
+      leftWheelPWM = 0;
     } else {
       if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
         rightWheelPWM = 0;
@@ -481,7 +521,6 @@ void loop() {
         leftWheelPWM = basePWM - u;
       }
     }
-    
     M1_forward(leftWheelPWM);
     M2_forward(rightWheelPWM);
   }
