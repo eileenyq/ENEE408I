@@ -307,7 +307,7 @@ void jumpForward(int distance){
   float angleZ = 0;
   unsigned long previousTime = millis();
   int u = 0;
-  float kp = 5;
+  float kp = 1;
   float ki = 0.01;
   float kd = 20;
   int rightWheelPWM = 0;
@@ -326,10 +326,10 @@ void jumpForward(int distance){
     total = total + angleZ;
     u = kp*angleZ + kd*diff+ ki*total;
     lastAngle = angleZ;
-    rightWheelPWM = 100 + u;
-    leftWheelPWM = 100 - u;
-    M1_forward(rightWheelPWM);
-    M2_forward(leftWheelPWM);
+    rightWheelPWM = 100 - u;
+    leftWheelPWM = 100 + u;
+    M1_forward(leftWheelPWM);
+    M2_forward(rightWheelPWM);
   }
   M1_stop();
   M2_stop();
@@ -391,7 +391,7 @@ int check(){
   delay(5000);
   readADC();
   digitalConvert();
-  jumpBackward(30);
+  jumpBackward(25);
   if (allBlack()){
     return 1;
   } else if (allWhite()){
@@ -612,51 +612,51 @@ void followBox() {
 
 
 void loop() {
-  // prev_e = 0;
-  // int u = 0;
-  // int rightWheelPWM = 0;
-  // int leftWheelPWM = 0;
-  // float pos = 0;
+  prev_e = 0;
+  int u = 0;
+  int rightWheelPWM = 0;
+  int leftWheelPWM = 0;
+  float pos = 0;
   while(true) {
 
-    // readADC();
-    // digitalConvert();
-    // delay(1);
-    // Encoder enc1(M1_ENC_A, M1_ENC_B);
-    // Encoder enc2(M2_ENC_A, M2_ENC_B);
-    // pos = getPosition(/* Arguments */);
-    // Serial.print("pos:");
-    // Serial.print(pos);
-    // Define the PID errors
-    // e = mid - pos;
-    // d_e = (e - prev_e); 
-    // total_e= total_e + e;
-    // prev_e = e;
-    // Serial.print(", e:");
-    // Serial.print(e);
-    // Serial.print(", prev_e:");
-    // Serial.print(prev_e);
-    // Serial.print(", d_e:");
-    // Serial.print(d_e);
-    // Serial.print(", total_e:");
-    // Serial.print(total_e);
-    // Serial.print(", u:");
-    // Serial.print(u);
-    // Implement PID control (include safeguards for when the PWM values go below 0 or exceed maximum)
-    // u = Kp*e + Ki*total_e + Kd*d_e;
-    // int basePWM = 80;
+    readADC();
+    digitalConvert();
+    delay(1);
+    pos = getPosition(/* Arguments */);
+    Serial.print("pos:");
+    Serial.print(pos);
+    //Define the PID errors
+    e = mid - pos;
+    d_e = (e - prev_e); 
+    total_e= total_e + e;
+    prev_e = e;
+    Serial.print(", e:");
+    Serial.print(e);
+    Serial.print(", prev_e:");
+    Serial.print(prev_e);
+    Serial.print(", d_e:");
+    Serial.print(d_e);
+    Serial.print(", total_e:");
+    Serial.print(total_e);
+    Serial.print(", u:");
+    Serial.print(u);
+    //Implement PID control (include safeguards for when the PWM values go below 0 or exceed maximum)
+    u = Kp*e + Ki*total_e + Kd*d_e;
+    int basePWM = 80;
    
      
-    // Serial.print(", rightWheelPWM:");
-    // Serial.print(rightWheelPWM);
-    // Serial.print(", leftWheelPWM:");
-    // Serial.println(leftWheelPWM);
+    Serial.print(", rightWheelPWM:");
+    Serial.print(rightWheelPWM);
+    Serial.print(", leftWheelPWM:");
+    Serial.println(leftWheelPWM);
 
     int test;
     test = isCorner();
     if (test == 3){
       followBox();
     }
+
+
     // Check for corners
     // int side = isCorner();
     // Serial.print("side");
@@ -700,16 +700,16 @@ void loop() {
     //   rotateNDegrees2(60);
     //   delay(2000);
     // } else {
-    //   if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
-    //     rightWheelPWM = 0;
-    //     leftWheelPWM = 0;
-    //   } else {
-    //     rightWheelPWM = basePWM + u; //positive error
-    //     leftWheelPWM = basePWM - u;
-    //   }
-    // }
+    if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
+      rightWheelPWM = 0;
+      leftWheelPWM = 0;
+    } else {
+      rightWheelPWM = basePWM + u; //positive error
+      leftWheelPWM = basePWM - u;
+    }
     
-    // M1_forward(leftWheelPWM);
-    // M2_forward(rightWheelPWM);
+    
+    M1_forward(leftWheelPWM);
+    M2_forward(rightWheelPWM);
   }
 }
