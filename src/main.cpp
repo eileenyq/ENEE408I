@@ -2,7 +2,6 @@
 #include <Adafruit_MCP3008.h>
 #include <Encoder.h>
 #include <Adafruit_MPU6050.h>
-
 #include <Adafruit_Sensor.h>
 
 // ADC (line sensor)
@@ -15,7 +14,7 @@ const unsigned int ADC_2_CS = 17;
 int adc1_buf[8];
 int adc2_buf[8];
 
-uint8_t lineArray[13]; 
+uint8_t lineArray[13];
 
 // Encoders
 const unsigned int M1_ENC_A = 39;
@@ -66,6 +65,8 @@ float Ki = .0001;
 /*
  *  Line sensor functions
  */
+void digitalConvert();
+float getRightMostPosition();
 void readADC() {
   for (int i = 0; i < 8; i++) {
     adc1_buf[i] = adc1.readADC(i); //read from one side
@@ -85,15 +86,15 @@ void rotateNDegrees2(int degrees) {
   while (abs(angleZ) < degrees) {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
-    
+
     unsigned long currentTime = millis();
     float elapsedTime = (currentTime - previousTime) / 1000.0;
-    
+
     angleZ += g.gyro.z * elapsedTime * (180.0 / PI);
-    
+
     //Serial.print("Angle: ");
     //Serial.println(angleZ);
-    
+
     previousTime = currentTime;
     delay(10);
   }
@@ -118,12 +119,12 @@ void rotateNDegrees1(int degrees) {
 
     unsigned long currentTime = millis();
     float elapsedTime = (currentTime - previousTime) / 1000.0;
-    
+
     angleZ += g.gyro.z * elapsedTime * (180.0 / PI);
-    
+
     // Serial.print("Angle: ");
     // Serial.println(angleZ);
-    
+
     previousTime = currentTime;
     delay(10);
   }
@@ -136,6 +137,7 @@ void rotateNDegrees1(int degrees) {
 }
 
 void rotateClockwise(int degrees) {
+  printf("rotatingClockwise %d degrees\n", degrees);
   float angleZ = 0;
   unsigned long previousTime = millis();
   int u =0;
@@ -146,26 +148,26 @@ void rotateClockwise(int degrees) {
 
     unsigned long currentTime = millis();
     float elapsedTime = (currentTime - previousTime) / 1000.0;
-    
+
     angleZ += g.gyro.z * elapsedTime * (180.0 / PI);
-    
+
     previousTime = currentTime;
     u = 90;
-    Serial.println(u);
+    //Serial.printf("[rotateClockwise()] u: %d\n", u);
     if (degrees + angleZ < -0.5){
-      ledcWrite(M1_IN_1_CHANNEL, u);
+      ledcWrite(M1_IN_1_CHANNEL, 0);//
       ledcWrite(M1_IN_2_CHANNEL, 0);
       ledcWrite(M2_IN_1_CHANNEL, 0);
-      ledcWrite(M2_IN_2_CHANNEL, u);
+      ledcWrite(M2_IN_2_CHANNEL, u);//
     } else if (degrees + angleZ > 0.5) {
       ledcWrite(M1_IN_1_CHANNEL, 0);
-      ledcWrite(M1_IN_2_CHANNEL, u);
-      ledcWrite(M2_IN_1_CHANNEL, u);
+      ledcWrite(M1_IN_2_CHANNEL, u);//
+      ledcWrite(M2_IN_1_CHANNEL, 0);//
       ledcWrite(M2_IN_2_CHANNEL, 0);
     } else {
-      Serial.print("breaking");
       counter++;
       if (counter == 3){
+        Serial.print("breaking");
         break;
       }
     }
@@ -177,6 +179,44 @@ void rotateClockwise(int degrees) {
   ledcWrite(M2_IN_2_CHANNEL, 0);
   Serial.print(degrees);
   Serial.println("-degree rotation complete!");
+  delay(1000);
+}
+int getLastWhite(){
+  for (int i=1; i<13; i++){
+    if (lineArray[i]==1){
+      return i - 1;
+    }
+  }
+  return 13;
+}
+void rotateBox() {
+  int u =0;
+  int counter = 0;
+  while (true) {
+    readADC();
+    digitalConvert();
+    int pos = getLastWhite();
+    u = 80;
+    if (6 - pos > 0){
+      ledcWrite(M1_IN_1_CHANNEL, 0);
+      ledcWrite(M1_IN_2_CHANNEL, u);
+      ledcWrite(M2_IN_1_CHANNEL, 0);//
+      ledcWrite(M2_IN_2_CHANNEL, 0);
+    } else if (6 - pos < 0) {
+      ledcWrite(M1_IN_1_CHANNEL, 0);//
+      ledcWrite(M1_IN_2_CHANNEL, 0);
+      ledcWrite(M2_IN_1_CHANNEL, 0);
+      ledcWrite(M2_IN_2_CHANNEL, u);
+    } else {
+      break;
+    }
+    delay(10);
+  }
+  ledcWrite(M1_IN_1_CHANNEL, 0);
+  ledcWrite(M1_IN_2_CHANNEL, 0);
+  ledcWrite(M2_IN_1_CHANNEL, 0);
+  ledcWrite(M2_IN_2_CHANNEL, 0);
+  delay(1000);
 }
 
 void rotateCounterClockwise(int degrees) {
@@ -190,26 +230,26 @@ void rotateCounterClockwise(int degrees) {
 
     unsigned long currentTime = millis();
     float elapsedTime = (currentTime - previousTime) / 1000.0;
-    
+
     angleZ += g.gyro.z * elapsedTime * (180.0 / PI);
-    
+
     previousTime = currentTime;
     u = 90;
     Serial.println(u);
     if (degrees - angleZ < -0.5){
       ledcWrite(M1_IN_1_CHANNEL, 0);
       ledcWrite(M1_IN_2_CHANNEL, u);
-      ledcWrite(M2_IN_1_CHANNEL, u);
+      ledcWrite(M2_IN_1_CHANNEL, 0);//
       ledcWrite(M2_IN_2_CHANNEL, 0);
     } else if (degrees - angleZ > 0.5) {
-      ledcWrite(M1_IN_1_CHANNEL, u);
+      ledcWrite(M1_IN_1_CHANNEL, 0);//
       ledcWrite(M1_IN_2_CHANNEL, 0);
       ledcWrite(M2_IN_1_CHANNEL, 0);
       ledcWrite(M2_IN_2_CHANNEL, u);
     } else {
       Serial.print("breaking");
       counter++;
-      if (counter == 3){
+      if (counter == 2){
         break;
       }
     }
@@ -221,14 +261,15 @@ void rotateCounterClockwise(int degrees) {
   ledcWrite(M2_IN_2_CHANNEL, 0);
   Serial.print(degrees);
   Serial.println("-degree rotation complete!");
+  delay(1000);
 }
 
-// Converts ADC readings to binary array lineArray[] (Check threshold for your robot) 
+// Converts ADC readings to binary array lineArray[] (Check threshold for your robot)
 void digitalConvert() {
   int threshold = 700;
   for (int i = 0; i < 7; i++) {
     if (adc1_buf[i]>threshold) {
-      lineArray[2*i] = 0; 
+      lineArray[2*i] = 0;
     } else {
       lineArray[2*i] = 1;
     }
@@ -245,17 +286,17 @@ void digitalConvert() {
   }
   Serial.println();
 }
-// Calculate robot's position on the line 
+// Calculate robot's position on the line
 float getPosition(/* Arguments */) {
   int position = 6;
-  /* Using lineArray[], which is an array of 13 Boolean values representing 1 
-   * if the line sensor reads a white surface and 0 for a dark surface, 
-   * this function returns a value between 0-12 for where the sensor thinks 
+  /* Using lineArray[], which is an array of 13 Boolean values representing 1
+   * if the line sensor reads a white surface and 0 for a dark surface,
+   * this function returns a value between 0-12 for where the sensor thinks
    * the center of line is (6 being the middle)
    */
   readADC();
   digitalConvert();
-  int sum = 0; 
+  int sum = 0;
   int numBlck = 0;
   for(int i = 0; i < 12; i++) {
     if (lineArray[i] == 0) {
@@ -278,11 +319,19 @@ float getPosition(/* Arguments */) {
  */
 void M1_forward(int pwm_value) {
   ledcWrite(M1_IN_1_CHANNEL, 0);
-  ledcWrite(M1_IN_2_CHANNEL, pwm_value);
+  if (pwm_value > PWM_MAX) {
+    ledcWrite(M1_IN_2_CHANNEL, PWM_MAX);
+  } else {
+    ledcWrite(M1_IN_2_CHANNEL, pwm_value);
+  }
 }
 void M2_forward(int pwm_value) {
   ledcWrite(M2_IN_1_CHANNEL, 0);
-  ledcWrite(M2_IN_2_CHANNEL, pwm_value);
+  if (pwm_value > PWM_MAX) {
+    ledcWrite(M2_IN_2_CHANNEL, PWM_MAX);
+  } else {
+    ledcWrite(M2_IN_2_CHANNEL, pwm_value);
+  }
 }
 
 void M1_backward(int pwm_value) {
@@ -338,14 +387,11 @@ void jumpForward(int distance){
 void jumpBackward(int distance){
   float angleZ = 0;
   unsigned long previousTime = millis();
-  int u = 0;
   float kp = 2;
   float ki = 0.01;
   float kd = 10;
-  int rightWheelPWM = 0;
-  int leftWheelPWM = 0;
-  int total = 0;
-  for (int i=0; i<distance; i++) {
+  int u = 0, rightWheelPWM = 0, leftWheelPWM = 0, total = 0;
+  for (int i = 0; i < distance; i++) {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
     unsigned long currentTime = millis();
@@ -377,7 +423,6 @@ bool allBlack(){
 }
 
 bool allWhite() {
-  
   for (int i = 0; i < 13; i++) {
     if (lineArray[i] != 1) {
       return false;
@@ -405,6 +450,7 @@ int isCorner() {
   readADC();
   digitalConvert();
   int c;
+  Serial.print("isCorner(): ");
   if (allWhite()){
     c = check();
     if (c == 1){
@@ -442,19 +488,19 @@ int isCorner() {
       return 10;
     }
   } else {
-    Serial.println("None");
+    Serial.println("Undefined Line Status");
     delay(1000);
   }
   return 1;
 }
 
 void turnCorner(int direction) {
-  /* 
-   * Use the encoder readings to turn the robot 90 degrees clockwise or 
-   * counterclockwise depending on the argument. You can calculate when the 
+  /*
+   * Use the encoder readings to turn the robot 90 degrees clockwise or
+   * counterclockwise depending on the argument. You can calculate when the
    * robot has turned 90 degrees using either the IMU or the encoders + wheel measurements
    */
-  //direction = 1 -> turn right, direction = 0 -> turn left 
+  //direction = 1 -> turn right, direction = 0 -> turn left
   if (direction == 1) {
     M1_forward(80);
     M2_backward(80);
@@ -482,7 +528,7 @@ void setup() {
   ledcAttachPin(M2_IN_1, M2_IN_1_CHANNEL);
   ledcAttachPin(M2_IN_2, M2_IN_2_CHANNEL);
 
-  adc1.begin(ADC_1_CS);  
+  adc1.begin(ADC_1_CS);
   adc2.begin(ADC_2_CS);
 
   pinMode(M1_I_SENSE, INPUT);
@@ -570,8 +616,10 @@ float getRightMostPosition(){
   }
   return 0;
 }
+
 void followBox() {
   //this code follows along the box counter clockwise
+  Serial.printf("In followBox()\n");
   float ki = 0;
   float kp = 5;
   float kd = 10;
@@ -581,81 +629,105 @@ void followBox() {
   float prev_e;
   readADC();
   digitalConvert();
-  jumpForward(10);
-  rotateClockwise(90);
+  // jumpForward(10);
+  // rotateClockwise(90);
   while (!allBlack()){
     readADC();
     digitalConvert();
+    if (allWhite()) {
+      M1_stop();
+      M2_stop();
+      delay(5000);
+      return;
+    }
     pos = getRightMostPosition();
     e = 7 - pos;
-    u = kp*e + kd*(e - prev_e); 
-    Serial.print("pos: ");
-    Serial.print(pos);
-    Serial.print("  u: ");
-    Serial.println(u);
+    u = kp*e + kd*(e - prev_e);
+    // Serial.print("pos: ");
+    // Serial.print(pos);
+    // Serial.print("  u: ");
+    // Serial.println(u);
     prev_e = e;
     if (u > 100){
       u = 100;
     }
-    if (allWhite()){
-      Serial.print("hi");
-    }
+    // if (allWhite()){
+    //   Serial.print("All White\n");
+    // }
     ledcWrite(M1_IN_1_CHANNEL, 0);
-    ledcWrite(M1_IN_2_CHANNEL, 100 + u);
+    ledcWrite(M1_IN_2_CHANNEL, 80 + u);
     ledcWrite(M2_IN_1_CHANNEL, 0);
-    ledcWrite(M2_IN_2_CHANNEL, 100 - u);
+    ledcWrite(M2_IN_2_CHANNEL, 80 - u);
   }
   M1_stop();
   M2_stop();
+  delay(2000);
+  //rotateClockwise(90);
+  //rotateCounterClockwise(90);
+  rotateBox();
+  followBox();
 }
 
-
-
+int isEdge(){
+  readADC();
+  digitalConvert();
+  if(allBlack() || allWhite()) {
+    return 0;
+  }
+  //Are we on a White | Black edge?
+  int i = 0;
+  while(i < 13 && lineArray[i] == 0) {
+    i++;
+  }
+  while(i < 13 && lineArray[i] == 1) {
+    i++;
+  }
+  if (i != 13) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
 void loop() {
   prev_e = 0;
-  int u = 0;
-  int rightWheelPWM = 0;
-  int leftWheelPWM = 0;
+  int u = 0, rightWheelPWM = 0, leftWheelPWM = 0, basePWM = 80, lineStatus = 0;
   float pos = 0;
-  while(true) {
 
+  while(true) {
     readADC();
     digitalConvert();
     delay(1);
-    pos = getPosition(/* Arguments */);
-    Serial.print("pos:");
-    Serial.print(pos);
+    pos = getPosition();
+    //Serial.printf("pos: %.2f", pos);
     //Define the PID errors
     e = mid - pos;
-    d_e = (e - prev_e); 
-    total_e= total_e + e;
+    d_e = (e - prev_e);
+    total_e = total_e + e;
     prev_e = e;
-    Serial.print(", e:");
-    Serial.print(e);
-    Serial.print(", prev_e:");
-    Serial.print(prev_e);
-    Serial.print(", d_e:");
-    Serial.print(d_e);
-    Serial.print(", total_e:");
-    Serial.print(total_e);
-    Serial.print(", u:");
-    Serial.print(u);
+    //Serial.printf(", e: %.2f, prev_e: %.2f, d_e: %.2f, total_e: %.2f, u: %d, ", e, prev_e, d_e, total_e, u);
     //Implement PID control (include safeguards for when the PWM values go below 0 or exceed maximum)
     u = Kp*e + Ki*total_e + Kd*d_e;
-    int basePWM = 80;
-   
-     
-    Serial.print(", rightWheelPWM:");
-    Serial.print(rightWheelPWM);
-    Serial.print(", leftWheelPWM:");
-    Serial.println(leftWheelPWM);
 
-    int test;
-    test = isCorner();
-    if (test == 3){
+    //Serial.printf(", rightWheelPWM: %d, leftWheelPWM: %d\n", rightWheelPWM, leftWheelPWM);
+
+    //lineStatus = isCorner();
+    Serial.printf("Pos: %d\n\n\n", getLastWhite());
+    if (allWhite()){
+      rotateClockwise(90);
+      delay(1000);
+    } else if (isEdge()){
       followBox();
+    } else {
+      if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
+        rightWheelPWM = 0;
+        leftWheelPWM = 0;
+      } else {
+        rightWheelPWM = basePWM + u; //positive error
+        leftWheelPWM = basePWM - u;
+      }
+      M1_forward(leftWheelPWM);
+      M2_forward(rightWheelPWM);
     }
-
 
     // Check for corners
     // int side = isCorner();
@@ -683,7 +755,7 @@ void loop() {
     //   digitalConvert();
     //   if (allWhite()) {
     //     //still all white, we turn
-    //     rotateNDegrees2(60); //turns right 
+    //     rotateNDegrees2(60); //turns right
     //     //check if we are in box
     //     delay(1000);
     //     followBox();
@@ -692,7 +764,7 @@ void loop() {
     //   }
     //   delay(500);
     // } else if(side == 4) {
-    //   //all black 
+    //   //all black
     //   delay(1000);
     //   M1_forward(150);
     //   M2_forward(150);
@@ -700,16 +772,14 @@ void loop() {
     //   rotateNDegrees2(60);
     //   delay(2000);
     // } else {
-    if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
-      rightWheelPWM = 0;
-      leftWheelPWM = 0;
-    } else {
-      rightWheelPWM = basePWM + u; //positive error
-      leftWheelPWM = basePWM - u;
-    }
-    
-    
-    M1_forward(leftWheelPWM);
-    M2_forward(rightWheelPWM);
+    // if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
+    //   rightWheelPWM = 0;
+    //   leftWheelPWM = 0;
+    // } else {
+    //   rightWheelPWM = basePWM + u; //positive error
+    //   leftWheelPWM = basePWM - u;
+    // }
+    // M1_forward(leftWheelPWM);
+    // M2_forward(rightWheelPWM);
   }
 }
