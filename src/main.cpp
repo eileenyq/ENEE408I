@@ -4,6 +4,9 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include "map.hpp"
+#include "client.hpp"
+
+//#define CLIENT /*comment out this line if we are runnning without wifi*/
 
 // ADC (line sensor)
 Adafruit_MCP3008 adc1;
@@ -265,10 +268,12 @@ void digitalConvert() {
       }
     }
   }
+  Data data;
+  data.status = 0;
   for (int i=0; i<13; i++){
-    Serial.print(lineArray[i]);
+    data.text[i] = lineArray[i];
   }
-  Serial.println();
+  sendMsg(&data);
 }
 // Calculate robot's position on the line
 float getPosition(/* Arguments */) {
@@ -436,45 +441,66 @@ int isCorner() {
   readADC();
   digitalConvert();
   int c;
+  Data data; 
   Serial.print("isCorner(): ");
   if (allWhite()){
     c = check();
     if (c == 1){
-      Serial.println("T Shape");
+      strcpy(data.text, "T Shape");
+      sendMsg(&data);
+      //Serial.println("T Shape");
       return 2;
     } else if (c == 2){
-      Serial.println("White Box");
+      strcpy(data.text, "White Box");
+      sendMsg(&data);
+      //Serial.println("White Box");
       return 3;
     } else {
-      Serial.println("Plus Shape");
+      strcpy(data.text, "Plus Shape");
+      sendMsg(&data);
+      //Serial.println("Plus Shape");
       return 4;
     }
   } else if (lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
     c = check();
     if (c == 1){
-      Serial.println("Left Corner");
+      strcpy(data.text, "Left Corner");
+      sendMsg(&data);
+      //Serial.println("Left Corner");
       return 5;
     } else if (c == 2){
-      Serial.println("White Box");
+      strcpy(data.text, "White Box");
+      sendMsg(&data);
+      //Serial.println("White Box");
       return 3;
     } else {
-      Serial.println("Left/Straight");
+      strcpy(data.text, "Left/Straight");
+      sendMsg(&data);
+      //Serial.println("Left/Straight");
       return 7;
     }
   } else if (lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
     c = check();
     if (c == 1){
-      Serial.println("Right Corner");
+      strcpy(data.text, "Right Corner");
+      sendMsg(&data);
+      //Serial.println("Right Corner");
       return 8;
     } else if (c == 2){
-      Serial.println("White Box");
+      strcpy(data.text, "White Box");
+      sendMsg(&data);
+      //Serial.println("White Box");
       return 3;
     } else {
-      Serial.println("Right/Straight");
+      strcpy(data.text, "Right/Straight");
+      sendMsg(&data);
+      //Serial.println("Right/Straight");
       return 10;
     }
   } else {
-    Serial.println("Undefined Line Status");
+    strcpy(data.text, "Undefined Line Status");
+    sendMsg(&data);
+    //Serial.println("Undefined Line Status");
   }
   return 1;
 }
@@ -591,6 +617,10 @@ void setup() {
     Serial.println("5 Hz");
     break;
   }
+#ifdef CLIENT
+  //set up client
+  client_setup();
+#endif
 }
 
 float getRightMostPosition(){
@@ -685,6 +715,10 @@ void loop() {
   float pos = 0;
 
   while(true) {
+    //reads messages sent from server, if any 
+#ifdef CLIENT
+    client_checkformsgs();
+#endif     
     readADC();
     digitalConvert();
     delay(1);
@@ -703,6 +737,7 @@ void loop() {
     // readADC();
     // digitalConvert();
     lineStatus = isCorner();
+    
     Serial.print("CheckingCorner");
     if (lineStatus == 3){
       delay(500);

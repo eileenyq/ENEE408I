@@ -1,17 +1,10 @@
 
 #include "client.hpp"
 
-// Define the structure of the data packet
-struct __attribute__((packed)) Data {
-    int16_t seq;     // sequence number
-    int32_t distance; // distance
-    float voltage;   // voltage
-    char text[50];   // text
-};
 
 // WiFi network credentials
-const char* ssid = "MOTO7030";
-const char* password = "hvpzmaks3a";
+const char* ssid = "";
+const char* password = "";
 
 
 // Server IP and port
@@ -55,31 +48,29 @@ void client_setup() {
     WiFi.reconnect(); //add
   }
 
-
   Serial.println("Connected to WiFi!");
-
- 
 
   // Connect to the server
   if (client.connect(host, port)) {
     Serial.println("Connected to server!");
+    //send test message 
+    client.write("Message From Client\n", 20);
   } else {
     Serial.println("Connection to server failed.");
     return;
   }
 }
+void sendMsg(Data * data) {
+  if (client.connected()) {
+    //send data
+    client.write((char*)data, sizeof(data));
+    Serial.printf("Sent %s", data->text);
+  } else {
+    Serial.printf("%s\n", data->text);
+  }
+}
 
-void client_loop() {
-    // Prepare data packet
-    Data data;
-    data.seq = 1;
-    data.distance = 1000;
-    data.voltage = 3.7f;
-    strncpy(data.text, "Hello from ESP32!", sizeof(data.text) - 1);
-    data.text[sizeof(data.text) - 1] = '\0';
-
-    //Serial.printf("seq %d distance %ld voltage %f text %s\n", data.seq, data.distance, data.voltage, data.text);
-
+void client_checkformsgs() {
     // Ensure connection is established with the server
     if (!client.connected()) {
         Serial.println("Disconnected from server. Attempting to reconnect...");
@@ -93,23 +84,15 @@ void client_loop() {
             return;
         }
     }
-
     // Check if connected to the server
     if (client.connected()) {
-        // Send data to the server
-        client.write((char*)&data, sizeof(data));
-
-
         // Read server's response 
         if (client.available() > 0) {
             Data response;
             client.readBytes((char*)&response, sizeof(response)); // Read data from server and unpack it
-            Serial.printf("Received response - seq %d, distance %ld, voltage %f, text %s\n",
-                          (int)response.seq, (long)response.distance, response.voltage, response.text);
+            Serial.printf("Received response - imageDetected %d, text %s\n",
+                          (int)response.status, response.text);
         }
-
-        // Increment sequence number for next packet
-        data.seq++;
-        delay(5000); // Delay to avoid flooding server
+        //delay(5000); // Delay to avoid flooding server
     }
 }
