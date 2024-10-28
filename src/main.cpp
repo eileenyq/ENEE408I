@@ -3,6 +3,7 @@
 #include <Encoder.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include "map.hpp"
 
 // ADC (line sensor)
 Adafruit_MCP3008 adc1;
@@ -734,5 +735,4 @@ void loop() {
       M2_forward(rightWheelPWM);
     }
   }
-  
 }
