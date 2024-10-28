@@ -682,7 +682,7 @@ int isEdge(){
 }
 void loop() {
   prev_e = 0;
-  int u = 0, rightWheelPWM = 0, leftWheelPWM = 0, basePWM = 100, lineStatus = 0;
+  int u = 0, rightWheelPWM = 0, leftWheelPWM = 0, basePWM = 100;//, lineStatus = 0;
   float pos = 0;
 
   while(true) {

@@ -1,5 +1,6 @@
 #include "map.hpp"
 
+int lineStatus;
 vector<vector<int>> maze_map (MAX_VECT);
 
 void bfs(int s, int dest, queue<int>& pathQueue)
