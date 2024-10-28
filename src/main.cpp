@@ -60,7 +60,7 @@ float prev_e;
 
 // Assign values to the following feedback constants:
 float Kp = 10;
-float Kd = 25;
+float Kd = 100;
 float Ki = 0;
 
 /*
@@ -250,7 +250,7 @@ void rotateCounterClockwise(int degrees) {
 
 // Converts ADC readings to binary array lineArray[] (Check threshold for your robot)
 void digitalConvert() {
-  int threshold = 650;
+  int threshold = 680;
   for (int i = 0; i < 7; i++) {
     if (adc1_buf[i]>threshold) {
       lineArray[2*i] = 0;
@@ -423,7 +423,6 @@ int check(){
   delay(1000);
   readADC();
   digitalConvert();
-  jumpBackward(10);
   if (allBlack()){
     return 1;
   } else if (allWhite()){
@@ -450,7 +449,7 @@ int isCorner() {
       Serial.println("Plus Shape");
       return 4;
     }
-  } else if (lineArray[6] == 1 && lineArray[7] == 1 && lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
+  } else if (lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Left Corner");
@@ -462,7 +461,7 @@ int isCorner() {
       Serial.println("Left/Straight");
       return 7;
     }
-  } else if (lineArray[6] == 1 && lineArray[5] == 1 && lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
+  } else if (lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Right Corner");
@@ -607,8 +606,8 @@ void followBox() {
   //this code follows along the box counter clockwise
   Serial.printf("In followBox()\n");
   float ki = 0;
-  float kp = 5;
-  float kd = 10;
+  float kp = 10;
+  float kd = 100;
   float pos;
   int u;
   float e;
@@ -624,14 +623,14 @@ void followBox() {
       M1_stop();
       M2_stop();
       delay(1000);
-      jumpForward(15);
+      jumpForward(10);
       delay(500);
-      rotateClockwise(60);
+      rotateClockwise(40);
       delay(500);
       return;
     }
     pos = getRightMostPosition();
-    e = 7 - pos;
+    e = 8 - pos;
     u = kp*e + kd*(e - prev_e);
     // Serial.print("pos: ");
     // Serial.print(pos);
@@ -654,9 +653,9 @@ void followBox() {
   delay(2000);
   //rotateClockwise(90);
   //rotateCounterClockwise(90);
-  jumpForward(25);
+  jumpForward(20);
   delay(500);
-  rotateCounterClockwise(60);
+  rotateCounterClockwise(40);
   followBox();
 }
 
@@ -707,20 +706,16 @@ void loop() {
     Serial.print("CheckingCorner");
     if (lineStatus == 3){
       delay(500);
-      jumpForward(20);
-      delay(500);
-      rotateClockwise(60);
+      rotateClockwise(50);
       delay(1000);
       followBox();
     } else if (lineStatus == 2 || lineStatus == 4 || lineStatus == 8 || lineStatus == 10){
-      jumpForward(20);
       delay(500);
-      rotateClockwise(60);
+      rotateClockwise(50);
       delay(500);
     } else if (lineStatus == 7 || lineStatus == 5){
-      jumpForward(20);
       delay(500);
-      rotateCounterClockwise(60);
+      rotateCounterClockwise(40);
       delay(500);
     } else {
       pos = getPosition();
@@ -729,7 +724,7 @@ void loop() {
         leftWheelPWM = 0;
       } else {
         rightWheelPWM = basePWM + u; //positive error
-        leftWheelPWM = basePWM +20 - u;
+        leftWheelPWM = basePWM - u;
       }
       M1_forward(leftWheelPWM);
       M2_forward(rightWheelPWM);
