@@ -1,14 +1,14 @@
 
 #include "client.hpp"
 
-
+extern int lineStatus;
 // WiFi network credentials
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "Eileenphone";
+const char* password = "123456789";
 
 
 // Server IP and port
-const char* host = "192.168.0.74";  // Replace with the IP address of server
+const char* host = "172.20.10.3";  // Replace with the IP address of server
 const uint16_t port = 2024;
 
 // Create a client
@@ -17,7 +17,7 @@ WiFiClient client;
 void client_setup() {
   Serial.begin(115200);
    delay(1000);
-  
+
   WiFi.begin(ssid, password);//add
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -53,29 +53,35 @@ void client_setup() {
   // Connect to the server
   if (client.connect(host, port)) {
     Serial.println("Connected to server!");
-    //send test message 
+    //send test message
     client.write("Message From Client\n", 20);
   } else {
     Serial.println("Connection to server failed.");
     return;
   }
 }
-void sendMsg(Data * data) {
+void sendMsg(char * msg) {
   if (client.connected()) {
     //send data
-    client.write((char*)data, sizeof(data));
-    Serial.printf("Sent %s", data->text);
+    struct Data d;
+
+    d.status = lineStatus;
+    memset(d.text, 0, 50);
+    strcpy(d.text, msg);
+    client.write((char*)&d, sizeof(d));
+    Serial.printf("Sent %s\n", d.text);
   } else {
-    Serial.printf("%s\n", data->text);
+    Serial.printf("%s\n", msg);
   }
+  delay(100);
 }
 
 void client_checkformsgs() {
     // Ensure connection is established with the server
     if (!client.connected()) {
-        Serial.println("Disconnected from server. Attempting to reconnect...");
-        client.stop();
-        delay(1000); // Short delay before reconnecting
+        //Serial.println("Disconnected from server. Attempting to reconnect...");
+        // client.stop();
+        delay(100); // Short delay before reconnecting
         if (client.connect(host, port)) {
             Serial.println("Reconnected to server.");
         } else {
@@ -86,12 +92,11 @@ void client_checkformsgs() {
     }
     // Check if connected to the server
     if (client.connected()) {
-        // Read server's response 
+        // Read server's response
         if (client.available() > 0) {
-            Data response;
-            client.readBytes((char*)&response, sizeof(response)); // Read data from server and unpack it
-            Serial.printf("Received response - imageDetected %d, text %s\n",
-                          (int)response.status, response.text);
+            char buffer[1];
+            client.readBytes(buffer, 1); // Read data from server and unpack it
+            Serial.printf("Received response - imageDetected %c", buffer[0]);
         }
         //delay(5000); // Delay to avoid flooding server
     }

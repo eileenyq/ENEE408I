@@ -6,7 +6,7 @@
 #include "map.hpp"
 #include "client.hpp"
 
-//#define CLIENT /*comment out this line if we are runnning without wifi*/
+#define CLIENT /*comment out this line if we are runnning without wifi*/
 
 // ADC (line sensor)
 Adafruit_MCP3008 adc1;
@@ -18,6 +18,7 @@ const unsigned int ADC_2_CS = 17;
 int adc1_buf[8];
 int adc2_buf[8];
 
+int lineStatus;
 uint8_t lineArray[13];
 
 // Encoders
@@ -254,6 +255,9 @@ void rotateCounterClockwise(int degrees) {
 // Converts ADC readings to binary array lineArray[] (Check threshold for your robot)
 void digitalConvert() {
   int threshold = 680;
+  char msg[50];
+  // strcpy(msg, "Hello!");
+  // sendMsg(msg);
   for (int i = 0; i < 7; i++) {
     if (adc1_buf[i]>threshold) {
       lineArray[2*i] = 0;
@@ -268,12 +272,12 @@ void digitalConvert() {
       }
     }
   }
-  Data data;
-  data.status = 0;
-  for (int i=0; i<13; i++){
-    data.text[i] = lineArray[i];
+  int i;
+  for (i = 0; i < 13; i++) {
+    msg[i] = lineArray[i] + 48;
   }
-  sendMsg(&data);
+  msg[i] = '\0';
+  sendMsg(msg);
 }
 // Calculate robot's position on the line
 float getPosition(/* Arguments */) {
@@ -441,65 +445,45 @@ int isCorner() {
   readADC();
   digitalConvert();
   int c;
-  Data data; 
+
   Serial.print("isCorner(): ");
   if (allWhite()){
     c = check();
     if (c == 1){
-      strcpy(data.text, "T Shape");
-      sendMsg(&data);
       //Serial.println("T Shape");
       return 2;
     } else if (c == 2){
-      strcpy(data.text, "White Box");
-      sendMsg(&data);
       //Serial.println("White Box");
       return 3;
     } else {
-      strcpy(data.text, "Plus Shape");
-      sendMsg(&data);
       //Serial.println("Plus Shape");
       return 4;
     }
   } else if (lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
     c = check();
     if (c == 1){
-      strcpy(data.text, "Left Corner");
-      sendMsg(&data);
       //Serial.println("Left Corner");
       return 5;
     } else if (c == 2){
-      strcpy(data.text, "White Box");
-      sendMsg(&data);
       //Serial.println("White Box");
       return 3;
     } else {
-      strcpy(data.text, "Left/Straight");
-      sendMsg(&data);
       //Serial.println("Left/Straight");
       return 7;
     }
   } else if (lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
     c = check();
     if (c == 1){
-      strcpy(data.text, "Right Corner");
-      sendMsg(&data);
       //Serial.println("Right Corner");
       return 8;
     } else if (c == 2){
-      strcpy(data.text, "White Box");
-      sendMsg(&data);
       //Serial.println("White Box");
       return 3;
     } else {
-      strcpy(data.text, "Right/Straight");
-      sendMsg(&data);
       //Serial.println("Right/Straight");
       return 10;
     }
   } else {
-    strcpy(data.text, "Undefined Line Status");
-    sendMsg(&data);
     //Serial.println("Undefined Line Status");
   }
   return 1;
@@ -713,12 +697,11 @@ void loop() {
   prev_e = 0;
   int u = 0, rightWheelPWM = 0, leftWheelPWM = 0, basePWM = 100;//, lineStatus = 0;
   float pos = 0;
-
   while(true) {
-    //reads messages sent from server, if any 
+    //reads messages sent from server, if any
 #ifdef CLIENT
     client_checkformsgs();
-#endif     
+#endif
     readADC();
     digitalConvert();
     delay(1);
@@ -733,11 +716,11 @@ void loop() {
     //Implement PID control (include safeguards for when the PWM values go below 0 or exceed maximum)
     u = Kp*e + Ki*total_e + Kd*d_e;
 
-    Serial.printf(", rightWheelPWM: %d, leftWheelPWM: %d\n", rightWheelPWM, leftWheelPWM);
+    //Serial.printf(", rightWheelPWM: %d, leftWheelPWM: %d\n", rightWheelPWM, leftWheelPWM);
     // readADC();
     // digitalConvert();
     lineStatus = isCorner();
-    
+
     Serial.print("CheckingCorner");
     if (lineStatus == 3){
       delay(500);
