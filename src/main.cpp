@@ -36,7 +36,7 @@ const unsigned int M2_IN_2_CHANNEL = 11;
 const unsigned int M1_I_SENSE = 35;
 const unsigned int M2_I_SENSE = 34;
 
-const unsigned int PWM_MAX = 255;
+const unsigned int PWM_MAX = 255; //255;
 const int freq = 5000;
 const int resolution = 8; // 8-bit resolution -> PWM values go from 0-255
 
@@ -280,20 +280,20 @@ float getPosition(/* Arguments */) {
   readADC();
   digitalConvert();
   int sum = 0;
-  int numBlck = 0;
-  for(int i = 0; i < 12; i++) {
-    if (lineArray[i] == 0) {
+  int numWhite = 0;
+  for(int i = 0; i < 13; i++) {
+    if (lineArray[i] == 1) {
       sum += i;
-      numBlck++;
+      numWhite++;
     }
   }
 
-  if (numBlck == 0) {
+  if (numWhite == 14) {
     return (float)5.33;
-  } else if (numBlck >= 10) {
-    return (float)5.33;
+  } else if (numWhite == 0) {
+    return (float)13;
   } else {
-    return (float)sum/(float)numBlck;
+    return (float)sum/(float)numWhite;
   }
 }
 
@@ -302,16 +302,16 @@ float getPosition(/* Arguments */) {
  */
 void M1_forward(int pwm_value) {
   ledcWrite(M1_IN_1_CHANNEL, 0);
-  if (pwm_value > PWM_MAX) {
-    ledcWrite(M1_IN_2_CHANNEL, PWM_MAX);
+  if (pwm_value > 120) {
+    ledcWrite(M1_IN_2_CHANNEL, 120);
   } else {
     ledcWrite(M1_IN_2_CHANNEL, pwm_value);
   }
 }
 void M2_forward(int pwm_value) {
   ledcWrite(M2_IN_1_CHANNEL, 0);
-  if (pwm_value > PWM_MAX) {
-    ledcWrite(M2_IN_2_CHANNEL, PWM_MAX);
+  if (pwm_value > 120) {
+    ledcWrite(M2_IN_2_CHANNEL, 120);
   } else {
     ledcWrite(M2_IN_2_CHANNEL, pwm_value);
   }
@@ -358,8 +358,8 @@ void jumpForward(int distance){
     total = total + angleZ;
     u = kp*angleZ + kd*diff+ ki*total;
     lastAngle = angleZ;
-    rightWheelPWM = 100 - u;
-    leftWheelPWM = 100 + u;
+    rightWheelPWM = 80 - u;
+    leftWheelPWM = 80 + u;
     M1_forward(leftWheelPWM);
     M2_forward(rightWheelPWM);
   }
@@ -418,7 +418,7 @@ int check(){
   M1_stop();
   M2_stop();
   delay(1000);
-  jumpForward(10);
+  jumpForward(20);
   delay(1000);
   readADC();
   digitalConvert();
@@ -448,7 +448,7 @@ int isCorner() {
       Serial.println("Plus Shape");
       return 4;
     }
-  } else if (lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
+  } else if (lineArray[5] == 1 && lineArray[6] == 1 && lineArray[7] == 1 && lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Left Corner");
@@ -460,7 +460,7 @@ int isCorner() {
       Serial.println("Left/Straight");
       return 7;
     }
-  } else if (lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
+  } else if (lineArray[7] == 1 && lineArray[6] == 1 && lineArray[5] == 1 && lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Right Corner");
@@ -622,7 +622,7 @@ void followBox() {
       M1_stop();
       M2_stop();
       delay(1000);
-      jumpForward(10);
+      jumpForward(20);
       delay(500);
       rotateClockwise(40);
       delay(500);
@@ -643,9 +643,9 @@ void followBox() {
     //   Serial.print("All White\n");
     // }
     ledcWrite(M1_IN_1_CHANNEL, 0);
-    ledcWrite(M1_IN_2_CHANNEL, 100 + u);
+    ledcWrite(M1_IN_2_CHANNEL, 80 + u);
     ledcWrite(M2_IN_1_CHANNEL, 0);
-    ledcWrite(M2_IN_2_CHANNEL, 100 - u);
+    ledcWrite(M2_IN_2_CHANNEL, 80 - u);
   }
   M1_stop();
   M2_stop();
@@ -680,7 +680,9 @@ int isEdge(){
 }
 void loop() {
   prev_e = 0;
-  int u = 0, rightWheelPWM = 0, leftWheelPWM = 0, basePWM = 100, lineStatus = 0;
+  int u = 0;
+  int rightWheelPWM = 0, leftWheelPWM = 0;
+  int basePWM = 80, lineStatus = 0;
   float pos = 0;
 
   while(true) {
@@ -688,7 +690,14 @@ void loop() {
     digitalConvert();
     delay(1);
     pos = getPosition();
-    //Serial.printf("pos: %.2f", pos);
+    if (allBlack()) {
+      jumpForward(3);
+      delay(1000);
+      //M1_forward(basePWM + 10 - u*0.8);
+      //M2_forward(basePWM + u*0.8);
+      continue;
+    }
+    Serial.printf("pos: %.2f", pos);
     //Define the PID errors
     e = mid - pos;
     d_e = (e - prev_e);
@@ -701,7 +710,9 @@ void loop() {
     Serial.printf(", rightWheelPWM: %d, leftWheelPWM: %d\n", rightWheelPWM, leftWheelPWM);
     // readADC();
     // digitalConvert();
+    
     lineStatus = isCorner();
+    
     Serial.print("CheckingCorner");
     if (lineStatus == 3){
       delay(500);
@@ -718,12 +729,12 @@ void loop() {
       delay(500);
     } else {
       pos = getPosition();
-      if (basePWM -u < 0|| basePWM + u > 255 || pos == 13) {
+      if (basePWM - u  < 0|| basePWM + u > 255 || basePWM + u < 0 || basePWM - u > 255) {
         rightWheelPWM = 0;
         leftWheelPWM = 0;
       } else {
-        rightWheelPWM = basePWM + u; //positive error
-        leftWheelPWM = basePWM - u;
+        rightWheelPWM = basePWM - u; //positive error
+        leftWheelPWM = basePWM + u;
       }
       M1_forward(leftWheelPWM);
       M2_forward(rightWheelPWM);
