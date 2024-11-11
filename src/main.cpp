@@ -742,7 +742,7 @@ void loop() {
         leftWheelPWM = 0;
       } else {
         rightWheelPWM = basePWM + u; //positive error
-        leftWheelPWM = basePWM - u;
+        leftWheelPWM = basePWM + 20 - u;
       }
       M1_forward(leftWheelPWM);
       M2_forward(rightWheelPWM);
