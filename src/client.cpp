@@ -73,7 +73,7 @@ void sendMsg(char * msg) {
   } else {
     Serial.printf("%s\n", msg);
   }
-  delay(100);
+  //delay(100);
 }
 
 void client_checkformsgs() {
@@ -81,12 +81,12 @@ void client_checkformsgs() {
     if (!client.connected()) {
         //Serial.println("Disconnected from server. Attempting to reconnect...");
         // client.stop();
-        delay(100); // Short delay before reconnecting
+        //delay(100); // Short delay before reconnecting
         if (client.connect(host, port)) {
             Serial.println("Reconnected to server.");
         } else {
             Serial.println("Reconnect failed.");
-            delay(5000); // Retry delay
+            //delay(5000); // Retry delay
             return;
         }
     }

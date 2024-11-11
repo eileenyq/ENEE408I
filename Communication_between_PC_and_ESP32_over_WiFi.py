@@ -37,11 +37,12 @@ def getImage():
 
 
 # Main server loop
-connection, client_address = server_socket.accept()
+#connection, client_address = server_socket.accept()
 while True:
     # Wait for a connection
     try:
         #print("Connection from", client_address)
+        connection, client_address = server_socket.accept()
 
         # Receive data from the client
         data = receive_full_data(connection, expected_size)
@@ -57,6 +58,6 @@ while True:
         connection.sendall(response_data)
     except Exception as e:
         print(f"Something went wrong: {e}")
-    #finally:
+    finally:
         # Clean up the connection
-        #connection.close()
+        connection.close()
