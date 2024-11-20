@@ -67,10 +67,6 @@ def speechRecognition():
 def getImage():
     return 'd'
 
-def getAudioCmd():
-    print(audio_cmd)
-    return audio_cmd
-
 # Main server loop
 #connection, client_address = server_socket.accept()
 def main(): 
@@ -92,7 +88,7 @@ def main():
             #Prepare response
             if status == 5:
                 print("requesting image")
-                cmd = img_cmd
+                cmd = getImage()
             elif status == 4:
                 print("requesting audio")
                 cmd = speechRecognition()
