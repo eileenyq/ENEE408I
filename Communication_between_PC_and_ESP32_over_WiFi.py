@@ -1,5 +1,6 @@
 import socket
 import struct
+import speech_recognition as sr
 
 # Host IP and port
 HOST = '0.0.0.0'  # Replace with the host IP address
@@ -33,6 +34,34 @@ def receive_full_data(connection, size):
     return data
 
 def speechRecognition():
+    recognizer = sr.Recognizer()
+
+    with sr.Microphone() as source:
+        print("Listening for direction...")
+        recognizer.adjust_for_ambient_noise(source, duration=1)
+        audio = recognizer.listen(source)
+
+    try:
+        command = recognizer.recognize_google(audio)
+        print("You said:", command)
+        if "left" in command:
+            print("Taking the left path.")
+            
+            # Add code to move robot left
+            
+        elif "right" in command:
+            print("Taking the right path.")
+            
+        
+            # Add code to move robot right
+        else:
+            print("Unrecognized word, defaulting to locate source.")
+
+    except sr.UnknownValueError:
+        print("Could not understand the audio")
+    except sr.RequestError as e:
+        print(f"Could not request results from Google Speech ; {e}")
+
     return 'l'
 
 def getImage():
