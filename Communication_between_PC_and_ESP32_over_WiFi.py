@@ -48,12 +48,13 @@ def speechRecognition():
             print("Taking the left path.")
             
             # Add code to move robot left
+            return 'l'
             
         elif "right" in command:
             print("Taking the right path.")
-            
         
             # Add code to move robot right
+            return 'r'
         else:
             print("Unrecognized word, defaulting to locate source.")
 
@@ -61,8 +62,7 @@ def speechRecognition():
         print("Could not understand the audio")
     except sr.RequestError as e:
         print(f"Could not request results from Google Speech ; {e}")
-
-    return 'l'
+    return 'x'
 
 def getImage():
     return 'd'
@@ -76,7 +76,6 @@ def getAudioCmd():
 def main(): 
     while True:
         # Wait for a connection
-        audio_cmd = speechRecognition()
         try:
             #print("Connection from", client_address)
             connection, client_address = server_socket.accept()
@@ -96,7 +95,7 @@ def main():
                 cmd = img_cmd
             elif status == 4:
                 print("requesting audio")
-                cmd = audio_cmd
+                cmd = speechRecognition()
             else:
                 cmd = 'x'
             response_data = struct.pack('<1s', cmd.encode('utf-8'))
