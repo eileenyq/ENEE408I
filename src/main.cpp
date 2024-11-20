@@ -8,6 +8,8 @@
 Adafruit_MCP3008 adc1;
 Adafruit_MCP3008 adc2;
 
+int mode;
+int cornerFlag;
 const unsigned int ADC_1_CS = 2;
 const unsigned int ADC_2_CS = 17;
 
@@ -50,7 +52,7 @@ Adafruit_MPU6050 mpu;
 
 // PID
 const int base_pid = 80; // Base speed for robot
-const float mid = 5.33;
+const float mid = 7;
 
 float e;
 float d_e;
@@ -59,7 +61,7 @@ float prev_e;
 
 // Assign values to the following feedback constants:
 float Kp = 10;
-float Kd = 100;
+float Kd = 50;
 float Ki = 0;
 
 /*
@@ -169,7 +171,7 @@ void rotateClockwise(int degrees) {
   ledcWrite(M2_IN_2_CHANNEL, 0);
   Serial.print(degrees);
   Serial.println("-degree rotation complete!");
-  delay(1000);
+  delay(50);
 }
 
 int getLastWhite(){
@@ -208,7 +210,7 @@ void rotateBox() {
   ledcWrite(M1_IN_2_CHANNEL, 0);
   ledcWrite(M2_IN_1_CHANNEL, 0);
   ledcWrite(M2_IN_2_CHANNEL, 0);
-  delay(1000);
+  delay(50);
 }
 
 void rotateCounterClockwise(int degrees) {
@@ -244,12 +246,12 @@ void rotateCounterClockwise(int degrees) {
   ledcWrite(M2_IN_2_CHANNEL, 0);
   Serial.print(degrees);
   Serial.println("-degree rotation complete!");
-  delay(1000);
+  delay(50);
 }
 
 // Converts ADC readings to binary array lineArray[] (Check threshold for your robot)
 void digitalConvert() {
-  int threshold = 680;
+  int threshold = 700;
   for (int i = 0; i < 7; i++) {
     if (adc1_buf[i]>threshold) {
       lineArray[2*i] = 0;
@@ -417,9 +419,9 @@ bool allWhite() {
 int check(){
   M1_stop();
   M2_stop();
-  delay(1000);
-  jumpForward(20);
-  delay(1000);
+  delay(50);
+  jumpForward(15);
+  delay(50);
   readADC();
   digitalConvert();
   if (allBlack()){
@@ -448,7 +450,7 @@ int isCorner() {
       Serial.println("Plus Shape");
       return 4;
     }
-  } else if (lineArray[5] == 1 && lineArray[6] == 1 && lineArray[7] == 1 && lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
+  } else if (lineArray[6] == 1 && lineArray[7] == 1 && lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Left Corner");
@@ -460,7 +462,7 @@ int isCorner() {
       Serial.println("Left/Straight");
       return 7;
     }
-  } else if (lineArray[7] == 1 && lineArray[6] == 1 && lineArray[5] == 1 && lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
+  } else if (lineArray[6] == 1 && lineArray[5] == 1 && lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Right Corner");
@@ -521,7 +523,7 @@ void setup() {
   M1_stop();
   M2_stop();
 
-  delay(100);
+  delay(50);
 
   // Try to initialize!
   if (!mpu.begin()) {
@@ -606,7 +608,7 @@ void followBox() {
   Serial.printf("In followBox()\n");
   float ki = 0;
   float kp = 10;
-  float kd = 100;
+  float kd = 50;
   float pos;
   int u;
   float e;
@@ -621,15 +623,15 @@ void followBox() {
     if (allWhite()) {
       M1_stop();
       M2_stop();
-      delay(1000);
-      jumpForward(20);
-      delay(500);
+      delay(50);
+      jumpForward(15);
+      delay(50);
       rotateClockwise(40);
-      delay(500);
+      delay(50);
       return;
     }
     pos = getRightMostPosition();
-    e = 8 - pos;
+    e = 7 - pos;
     u = kp*e + kd*(e - prev_e);
     // Serial.print("pos: ");
     // Serial.print(pos);
@@ -649,12 +651,13 @@ void followBox() {
   }
   M1_stop();
   M2_stop();
-  delay(2000);
+  delay(50);
   //rotateClockwise(90);
   //rotateCounterClockwise(90);
-  jumpForward(20);
-  delay(500);
-  rotateCounterClockwise(40);
+  jumpForward(30);
+  delay(50);
+  rotateCounterClockwise(30);
+  delay(50);
   followBox();
 }
 
@@ -684,15 +687,24 @@ void loop() {
   int rightWheelPWM = 0, leftWheelPWM = 0;
   int basePWM = 80, lineStatus = 0;
   float pos = 0;
+  mode = 0;
+  cornerFlag = 0;
 
   while(true) {
     readADC();
     digitalConvert();
-    delay(1);
     pos = getPosition();
     if (allBlack()) {
-      jumpForward(3);
-      delay(1000);
+      if (mode == 0){
+        jumpForward(3);
+        delay(50);
+      } else if (mode == 1){
+        jumpBackward(20);
+        delay(5000);
+        jumpForward(15);
+        delay(5000);
+        jumpForward(30);
+      }
       //M1_forward(basePWM + 10 - u*0.8);
       //M2_forward(basePWM + u*0.8);
       continue;
@@ -712,21 +724,40 @@ void loop() {
     // digitalConvert();
     
     lineStatus = isCorner();
-    
+    // Send line follower readings
+    // Send line status
     Serial.print("CheckingCorner");
     if (lineStatus == 3){
-      delay(500);
-      rotateClockwise(50);
-      delay(1000);
+      delay(50);
+      rotateClockwise(40);
+      delay(50);
       followBox();
     } else if (lineStatus == 2 || lineStatus == 4 || lineStatus == 8 || lineStatus == 10){
-      delay(500);
-      rotateClockwise(50);
-      delay(500);
+      if (lineStatus == 10 && cornerFlag == 0){
+        mode = 1;
+        cornerFlag = 0;
+      }
+      if (lineStatus == 8){
+        cornerFlag = 1;
+      } else {
+        cornerFlag = 0;
+      }
+      delay(50);
+      rotateClockwise(40);
+      delay(50);
     } else if (lineStatus == 7 || lineStatus == 5){
-      delay(500);
+      if (lineStatus == 7 && cornerFlag == 0){
+        mode = 1;
+        cornerFlag = 0;
+      }
+      if (lineStatus == 5){
+        cornerFlag = 1;
+      } else {
+        cornerFlag = 0;
+      }
+      delay(50);
       rotateCounterClockwise(40);
-      delay(500);
+      delay(50);
     } else {
       pos = getPosition();
       if (basePWM - u  < 0|| basePWM + u > 255 || basePWM + u < 0 || basePWM - u > 255) {
