@@ -3,6 +3,8 @@
 #include <Encoder.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include "client.hpp"
+#define CLIENT
 
 // ADC (line sensor)
 Adafruit_MCP3008 adc1;
@@ -592,6 +594,10 @@ void setup() {
     Serial.println("5 Hz");
     break;
   }
+  #ifdef CLIENT
+  //set up client
+  client_setup();
+  #endif
 }
 
 float getRightMostPosition(){
@@ -728,6 +734,15 @@ void loop() {
     // Send line status
     Serial.print("CheckingCorner");
     if (lineStatus == 3){
+      // check for circle color
+      char msg[50];
+      strcpy(msg, "Gimme Circle");
+      sendMsg(msg, 3);
+      char cmd = client_checkformsgs();
+      while (cmd == 'x'){
+        cmd = client_checkformsgs();
+        Serial.println(cmd);
+      }
       delay(50);
       rotateClockwise(40);
       delay(50);
