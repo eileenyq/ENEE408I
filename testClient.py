@@ -9,8 +9,8 @@ def sendReq(s, num):
 def main():
     while True:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("127.0.0.1", 2022))
-        sendReq(s, 5)
+        s.connect(("127.0.0.1", 2024))
+        sendReq(s, 3)
         data = s.recv(1024)
         print(data.decode('utf-8'))
         s.close()

@@ -10,6 +10,8 @@
 Adafruit_MCP3008 adc1;
 Adafruit_MCP3008 adc2;
 
+int basePWM = 80;
+
 int mode;
 int cornerFlag;
 const unsigned int ADC_1_CS = 2;
@@ -362,8 +364,8 @@ void jumpForward(int distance){
     total = total + angleZ;
     u = kp*angleZ + kd*diff+ ki*total;
     lastAngle = angleZ;
-    rightWheelPWM = 80 - u;
-    leftWheelPWM = 80 + u;
+    rightWheelPWM =  basePWM - u;
+    leftWheelPWM = basePWM + u;
     M1_forward(leftWheelPWM);
     M2_forward(rightWheelPWM);
   }
@@ -391,8 +393,8 @@ void jumpBackward(int distance){
     total = total + angleZ;
     u = kp*angleZ + kd*diff+ ki*total;
     lastAngle = angleZ;
-    rightWheelPWM = 100 - u;
-    leftWheelPWM = 100 + u;
+    rightWheelPWM = basePWM - u;
+    leftWheelPWM = basePWM + u;
     M1_backward(rightWheelPWM);
     M2_backward(leftWheelPWM);
   }
@@ -651,9 +653,9 @@ void followBox() {
     //   Serial.print("All White\n");
     // }
     ledcWrite(M1_IN_1_CHANNEL, 0);
-    ledcWrite(M1_IN_2_CHANNEL, 80 + u);
+    ledcWrite(M1_IN_2_CHANNEL, basePWM + u);
     ledcWrite(M2_IN_1_CHANNEL, 0);
-    ledcWrite(M2_IN_2_CHANNEL, 80 - u);
+    ledcWrite(M2_IN_2_CHANNEL, basePWM - u);
   }
   M1_stop();
   M2_stop();
@@ -691,7 +693,7 @@ void loop() {
   prev_e = 0;
   int u = 0;
   int rightWheelPWM = 0, leftWheelPWM = 0;
-  int basePWM = 80, lineStatus = 0;
+  int lineStatus = 0;
   float pos = 0;
   mode = 0;
   cornerFlag = 0;
@@ -706,10 +708,33 @@ void loop() {
         delay(50);
       } else if (mode == 1){
         jumpBackward(20);
-        delay(5000);
+        char msg[50];
+        strcpy(msg, "Gimme Rectangle");
+        sendMsg(msg, 5);
+        char cmd = client_checkformsgs();
+        for (int i = 0; i < 100; i++){
+          sendMsg(msg, 5);
+          cmd = client_checkformsgs();
+          Serial.println(cmd);
+          if (cmd == 'l'||cmd == 'r'){
+            break;
+          }
+        }
+        strcpy(msg, "Rectangle found");
+        sendMsg(msg, 9);
+        delay(50);
         jumpForward(15);
-        delay(5000);
-        jumpForward(30);
+        delay(50);
+        if (cmd == 's'){
+          strcpy(msg, "Rectangle found - s");
+          sendMsg(msg, 9);
+          delay(10000);
+        } else if (cmd == 'r'){
+          rotateClockwise(40);
+        } else if (cmd == 'l'){
+          rotateCounterClockwise(40);
+        }
+
       }
       //M1_forward(basePWM + 10 - u*0.8);
       //M2_forward(basePWM + u*0.8);
@@ -740,9 +765,12 @@ void loop() {
       sendMsg(msg, 3);
       char cmd = client_checkformsgs();
       while (cmd == 'x'){
+        sendMsg(msg, 3);
         cmd = client_checkformsgs();
         Serial.println(cmd);
       }
+      strcpy(msg, "circle found");
+      sendMsg(msg, 9);
       delay(50);
       rotateClockwise(40);
       delay(50);

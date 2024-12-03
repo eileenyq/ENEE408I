@@ -3,12 +3,12 @@
 
 extern int lineStatus;
 // WiFi network credentials
-const char* ssid = "ZachiPhone";
+const char* ssid = "Eileenphone";
 const char* password = "123456789";
 
 
 // Server IP and port
-const char* host = "172.20.10.5";  // Replace with the IP address of server
+const char* host = "172.20.10.8";  // Replace with the IP address of server
 const uint16_t port = 2024;
 
 // Create a client
@@ -63,6 +63,16 @@ void client_setup() {
   }
 }
 void sendMsg(char * msg, char status) {
+  while (!client.connected()) {
+      //Serial.println("Disconnected from server. Attempting to reconnect...");
+      // client.stop();
+      if (client.connect(host, port)) {
+          Serial.println("Reconnected to server.");
+      } else {
+          Serial.println("Reconnect failed.");
+          //delay(5000); // Retry delay
+      }
+  }
   if (client.connected()) {
     //send data
     struct Data d;
@@ -96,7 +106,7 @@ char client_checkformsgs() {
         if (client.available() > 0) {
             char buffer[1];
             client.readBytes(buffer, 1); // Read data from server and unpack it
-            Serial.printf("Received response - imageDetected %c", buffer[0]);
+            Serial.printf("Received response - imageDetected %c\n", buffer[0]);
             return(buffer[0]);
         }
         //delay(5000); // Delay to avoid flooding server
