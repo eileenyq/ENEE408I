@@ -10,7 +10,7 @@
 Adafruit_MCP3008 adc1;
 Adafruit_MCP3008 adc2;
 
-int basePWM = 80;
+int basePWM = 90;
 
 int mode;
 int cornerFlag;
@@ -146,7 +146,7 @@ void rotateClockwise(int degrees) {
   printf("rotatingClockwise %d degrees\n", degrees);
   float angleZ = 0;
   unsigned long previousTime = millis();
-  int u =0;
+  int u = 0;
   while (true) {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
@@ -345,9 +345,9 @@ void jumpForward(int distance){
   float angleZ = 0;
   unsigned long previousTime = millis();
   int u = 0;
-  float kp = 1;
+  float kp = 2;
   float ki = 0.01;
-  float kd = 20;
+  float kd = 10;
   int rightWheelPWM = 0;
   int leftWheelPWM = 0;
   int total = 0;
@@ -393,8 +393,8 @@ void jumpBackward(int distance){
     total = total + angleZ;
     u = kp*angleZ + kd*diff+ ki*total;
     lastAngle = angleZ;
-    rightWheelPWM = basePWM - u;
-    leftWheelPWM = basePWM + u;
+    rightWheelPWM = 95 - u;
+    leftWheelPWM = 95 + u;
     M1_backward(rightWheelPWM);
     M2_backward(leftWheelPWM);
   }
@@ -424,7 +424,7 @@ int check(){
   M1_stop();
   M2_stop();
   delay(50);
-  jumpForward(15);
+  jumpForward(25);
   delay(50);
   readADC();
   digitalConvert();
@@ -634,7 +634,7 @@ void followBox() {
       delay(50);
       jumpForward(15);
       delay(50);
-      rotateClockwise(40);
+      rotateClockwise(50);
       delay(50);
       return;
     }
@@ -664,7 +664,7 @@ void followBox() {
   //rotateCounterClockwise(90);
   jumpForward(30);
   delay(50);
-  rotateCounterClockwise(30);
+  rotateCounterClockwise(40);
   delay(50);
   followBox();
 }
@@ -707,11 +707,12 @@ void loop() {
         jumpForward(3);
         delay(50);
       } else if (mode == 1){
-        jumpBackward(20);
+        jumpBackward(30);
         char msg[50];
         strcpy(msg, "Gimme Rectangle");
-        sendMsg(msg, 5);
-        char cmd = client_checkformsgs();
+        // sendMsg(msg, 5);
+        // char cmd = client_checkformsgs();
+        char cmd; 
         for (int i = 0; i < 100; i++){
           sendMsg(msg, 5);
           cmd = client_checkformsgs();
@@ -724,17 +725,28 @@ void loop() {
         }
         strcpy(msg, "Rectangle found");
         sendMsg(msg, 9);
-        delay(50);
-        jumpForward(15);
-        delay(50);
+        delay(5000);
         if (cmd == 's'){
           strcpy(msg, "Rectangle found - s");
           sendMsg(msg, 9);
-          delay(10000);
+          //jumpForward(100);
+          M1_forward(110);
+          M2_forward(110);
+          delay(1000);
+          M1_stop();
+          M2_stop();
         } else if (cmd == 'r'){
-          rotateClockwise(40);
+          jumpForward(40);
+          delay(50);
+          rotateClockwise(50);
         } else if (cmd == 'l'){
-          rotateCounterClockwise(40);
+          jumpForward(30);
+          delay(50);
+          rotateCounterClockwise(50);
+        } else {
+          strcpy(msg, "Rectangle found - s");
+          sendMsg(msg, 9);
+          jumpForward(60);
         }
 
       }
@@ -768,8 +780,8 @@ void loop() {
       }
       strcpy(msg, "circle found");
       sendMsg(msg, 9);
-      delay(50);
-      rotateClockwise(40);
+      delay(5000);
+      rotateClockwise(50);
       delay(50);
       followBox();
     } else if (lineStatus == 2 || lineStatus == 4 || lineStatus == 8 || lineStatus == 10){
@@ -783,7 +795,7 @@ void loop() {
         cornerFlag = 0;
       }
       delay(50);
-      rotateClockwise(40);
+      rotateClockwise(50);
       delay(50);
     } else if (lineStatus == 7 || lineStatus == 5){
       if (lineStatus == 7 && cornerFlag == 0){

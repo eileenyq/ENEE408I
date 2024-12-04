@@ -77,7 +77,8 @@ def speechRecognition():
     return 'x'
 
 def getRect(frame):
-    color = "blue" if blueCircleCount > redCircleCount and blueCircleCount > redCircleCount else ("red" if redCircleCount > greenCircleCount else "green")
+    color = "blue" if blueCircleCount > redCircleCount and blueCircleCount > greenCircleCount else ("red" if redCircleCount > greenCircleCount else "green")
+    print(f"looking for {color}")
     # Convert the frame to HSV color space
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
@@ -104,7 +105,7 @@ def getRect(frame):
     contours_green, _ = cv.findContours(mask_green, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     if color == "blue":
         for c in contours_blue:
-            if cv.contourArea(c) > 2000:  # Filter out small contours
+            if cv.contourArea(c) > 100:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
@@ -115,7 +116,7 @@ def getRect(frame):
                     return 'l'
     elif color == "red":
         for c in contours_red:
-            if cv.contourArea(c) > 2000:  # Filter out small contours
+            if cv.contourArea(c) > 100:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
@@ -126,7 +127,7 @@ def getRect(frame):
                     return 'l'
     elif color == "green":
         for c in contours_green:
-            if cv.contourArea(c) > 2000:  # Filter out small contours
+            if cv.contourArea(c) > 100:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
@@ -221,7 +222,7 @@ def detect_shape(c):   # the shape of a contour
 # Main server loop
 #connection, client_address = server_socket.accept()
 def main():
-    cap = cv.VideoCapture(0, cv.CAP_DSHOW)
+    cap = cv.VideoCapture(1, cv.CAP_DSHOW)
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         exit()
@@ -247,7 +248,7 @@ def main():
             if len(data) == expected_size:
                 unpacked_data = struct.unpack(format_string, data)
                 status, text = unpacked_data
-                #print(f"Received: status={status}, text={text.decode('utf-8').strip()}")
+                print(f"Received: status={status}, text={text.decode('utf-8').strip()}")
             else:
                 #print("Incomplete data received")
                 connection.close()
@@ -269,7 +270,7 @@ def main():
             #print(f"got cmd = {cmd}")
             if cmd != 'x':
                 response_data = struct.pack('<1s', cmd.encode('utf-8'))
-                #print(f"sending {cmd}")
+                print(f"sending {cmd}")
                 connection.sendall(response_data)
         except Exception as e:
             print(f"Something went wrong: {e}")
