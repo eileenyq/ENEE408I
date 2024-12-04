@@ -717,6 +717,8 @@ void loop() {
           cmd = client_checkformsgs();
           Serial.println(cmd);
           if (cmd == 'l'||cmd == 'r'){
+            strcpy(msg, "Rectangle found on left or right");
+            sendMsg(msg, 9);
             break;
           }
         }

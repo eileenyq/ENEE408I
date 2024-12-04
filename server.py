@@ -79,7 +79,6 @@ def speechRecognition():
 def getRect(frame):
     color = "blue" if blueCircleCount > redCircleCount and blueCircleCount > redCircleCount else ("red" if redCircleCount > greenCircleCount else "green")
     # Convert the frame to HSV color space
-    color = "blue"
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     # color ranges for detection
