@@ -746,14 +746,9 @@ void loop() {
     d_e = (e - prev_e);
     total_e = total_e + e;
     prev_e = e;
-    //Serial.printf(", e: %.2f, prev_e: %.2f, d_e: %.2f, total_e: %.2f, u: %d, ", e, prev_e, d_e, total_e, u);
     //Implement PID control (include safeguards for when the PWM values go below 0 or exceed maximum)
     u = Kp*e + Ki*total_e + Kd*d_e;
 
-    Serial.printf(", rightWheelPWM: %d, leftWheelPWM: %d\n", rightWheelPWM, leftWheelPWM);
-    // readADC();
-    // digitalConvert();
-    
     lineStatus = isCorner();
     // Send line follower readings
     // Send line status
@@ -814,5 +809,5 @@ void loop() {
       M2_forward(rightWheelPWM);
     }
   }
-  
+
 }

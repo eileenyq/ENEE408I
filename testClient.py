@@ -10,7 +10,8 @@ def main():
     while True:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("127.0.0.1", 2024))
-        sendReq(s, 3)
+
+        sendReq(s, 5)
         data = s.recv(1024)
         print(data.decode('utf-8'))
         s.close()

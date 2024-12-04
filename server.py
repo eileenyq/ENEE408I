@@ -9,6 +9,9 @@ blueCircleCount = 0
 redCircleCount = 0
 greenCircleCount = 0
 
+blueRectCount = 0
+redRectCount = 0
+greenRectCount = 0
 # Host IP and port
 HOST = '0.0.0.0'  # Replace with the host IP address
 PORT = 2024       # Arbitrary non-privileged port (>1024)
@@ -35,7 +38,6 @@ def receive_full_data(connection, size):
     data = b''
     while len(data) < size:
         packet = connection.recv(size - len(data))
-        print(packet)
         if not packet:
             break
         data += packet
@@ -54,13 +56,13 @@ def speechRecognition():
         print("You said:", command)
         if "left" in command:
             print("Taking the left path.")
-            
+
             # Add code to move robot left
             return 'l'
-            
+
         elif "right" in command:
             print("Taking the right path.")
-        
+
             # Add code to move robot right
             return 'r'
         else:
@@ -75,65 +77,106 @@ def speechRecognition():
     return 'x'
 
 def getRect(frame):
-
+    color = "blue" if blueCircleCount > redCircleCount and blueCircleCount > redCircleCount else ("red" if redCircleCount > greenCircleCount else "green")
     # Convert the frame to HSV color space
+    color = "blue"
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
-    # color ranges for detection 
+    # color ranges for detection
     # Red color range
-    lower_red = np.array([0, 120, 70])
+    #lower_red = np.array([0, 120, 70])
+    #lower_red = np.array([0, 100, 100]) #thinks blue is red
+    lower_red = np.array([0, 150, 100]) # i think this works well
     upper_red = np.array([10, 255, 255])
     mask_red = cv.inRange(hsv, lower_red, upper_red)
-    
-    # Green 
+
+    # Green
     lower_green = np.array([40, 40, 40])
     upper_green = np.array([80, 255, 255])
     mask_green = cv.inRange(hsv, lower_green, upper_green)
 
-    # Blue 
+    # Blue
     lower_blue = np.array([110, 50, 50])
     upper_blue = np.array([130, 255, 255])
     mask_blue = cv.inRange(hsv, lower_blue, upper_blue)
 
-    contours, _ = cv.findContours(mask_blue, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_red, _ = cv.findContours(mask_red, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_blue, _ = cv.findContours(mask_blue, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_green, _ = cv.findContours(mask_green, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    if color == "blue":
+        for c in contours_blue:
+            if cv.contourArea(c) > 2000:  # Filter out small contours
+                M = cv.moments(c)
+                cx = int(M["m10"] / M["m00"])
+                print(f"Centroid: ({cx})")
+                # Detect the shape of the contour
+                if cx >= 300:
+                    return 'r'
+                else:
+                    return 'l'
+    elif color == "red":
+        for c in contours_red:
+            if cv.contourArea(c) > 2000:  # Filter out small contours
+                M = cv.moments(c)
+                cx = int(M["m10"] / M["m00"])
+                print(f"Centroid: ({cx})")
+                # Detect the shape of the contour
+                if cx >= 300:
+                    return 'r'
+                else:
+                    return 'l'
+    elif color == "green":
+        for c in contours_green:
+            if cv.contourArea(c) > 2000:  # Filter out small contours
+                M = cv.moments(c)
+                cx = int(M["m10"] / M["m00"])
+                print(f"Centroid: ({cx})")
+                # Detect the shape of the contour
+                if cx >= 300:
+                    return 'r'
+                else:
+                    return 'l'
+    return 's'
 
-    for c in contours:
+def getCircle(frame):
+    global blueCircleCount
+    global redCircleCount
+    global greenCircleCount
+
+    # Convert the frame to HSV color space
+    hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+    # color ranges for detection
+    # Red color range
+    lower_red = np.array([0, 120, 70])
+    upper_red = np.array([10, 255, 255])
+    mask_red = cv.inRange(hsv, lower_red, upper_red)
+
+    # Green
+    lower_green = np.array([40, 40, 40])
+    upper_green = np.array([80, 255, 255])
+    mask_green = cv.inRange(hsv, lower_green, upper_green)
+
+    # Blue
+    lower_blue = np.array([110, 50, 50])
+    upper_blue = np.array([130, 255, 255])
+    mask_blue = cv.inRange(hsv, lower_blue, upper_blue)
+
+    contours_red, _ = cv.findContours(mask_red, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_blue, _ = cv.findContours(mask_blue, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_green, _ = cv.findContours(mask_green, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    for c in contours_red:
         if cv.contourArea(c) > 2000:  # Filter out small contours
             M = cv.moments(c)
             cx = int(M["m10"] / M["m00"])
             print(f"Centroid: ({cx})")
             # Detect the shape of the contour
-            if cx >= 300:
+            shape = detect_shape(c)
+            if shape == 'circle':
+                redCircleCount += 1
                 return 'r'
-            else:
-                return 'l'
-    return 's'
 
-def getCircle(frame):
-    global blueCircleCount
-
-    # Convert the frame to HSV color space
-    hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-
-    # color ranges for detection 
-    # Red color range
-    lower_red = np.array([0, 100, 100])
-    upper_red = np.array([10, 255, 255])
-    mask_red = cv.inRange(hsv, lower_red, upper_red)
-    
-    # Green 
-    lower_green = np.array([40, 40, 40])
-    upper_green = np.array([80, 255, 255])
-    mask_green = cv.inRange(hsv, lower_green, upper_green)
-
-    # Blue 
-    lower_blue = np.array([110, 50, 50])
-    upper_blue = np.array([130, 255, 255])
-    mask_blue = cv.inRange(hsv, lower_blue, upper_blue)
-
-    contours, _ = cv.findContours(mask_red, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-
-    for c in contours:
+    for c in contours_blue:
         if cv.contourArea(c) > 2000:  # Filter out small contours
             M = cv.moments(c)
             cx = int(M["m10"] / M["m00"])
@@ -142,7 +185,19 @@ def getCircle(frame):
             shape = detect_shape(c)
             if shape == 'circle':
                 blueCircleCount += 1
-                return 'c'
+                return 'b'
+
+    for c in contours_green:
+        if cv.contourArea(c) > 2000:  # Filter out small contours
+            M = cv.moments(c)
+            cx = int(M["m10"] / M["m00"])
+            #print(f"Centroid: ({cx})")
+            # Detect the shape of the contour
+            shape = detect_shape(c)
+            if shape == 'circle':
+                greenCircleCount += 1
+                return 'g'
+
     return 'x'
 
 def detect_shape(c):   # the shape of a contour
@@ -152,7 +207,7 @@ def detect_shape(c):   # the shape of a contour
     area = cv.contourArea(c)
     circularity = 4*3.14*area/(peri**2)
 
-        
+
     if area>5000 and circularity>0.3:
         shape = "circle"
 
@@ -166,8 +221,8 @@ def detect_shape(c):   # the shape of a contour
 
 # Main server loop
 #connection, client_address = server_socket.accept()
-def main(): 
-    cap = cv.VideoCapture(1)
+def main():
+    cap = cv.VideoCapture(0, cv.CAP_DSHOW)
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         exit()
@@ -176,25 +231,29 @@ def main():
         if not ret:
             print("Error: Failed to capture image")
             break
-        print(blueCircleCount)
+        print(f"redCircleCount: {redCircleCount}")
+        print(f"blueCircleCount: {blueCircleCount}")
+        print(f"greenCircleCount: {greenCircleCount}")
+        cv.imshow('Shape and Color Detection', frame)
+        cv.waitKey(1)
         #Wait for a connection
         try:
             connection, client_address = server_socket.accept()
-            print("Connection from", client_address)
+            #print("Connection from", client_address)
             # Receive data from the client
             data = receive_full_data(connection, expected_size)
-            
+
             #data = connection.recv(expected_size)
-            print("recieved")
+            #print("recieved")
             if len(data) == expected_size:
                 unpacked_data = struct.unpack(format_string, data)
                 status, text = unpacked_data
-                print(f"Received: status={status}, text={text.decode('utf-8').strip()}")
+                #print(f"Received: status={status}, text={text.decode('utf-8').strip()}")
             else:
-                print("Incomplete data received")
+                #print("Incomplete data received")
                 connection.close()
                 continue
-            
+
             #Prepare response
             if status == 5:
                 print("requesting rectangle")
@@ -208,10 +267,10 @@ def main():
                 cmd = getCircle(frame)
             else:
                 cmd = 'x'
-            print(f"got cmd = {cmd}")
+            #print(f"got cmd = {cmd}")
             if cmd != 'x':
                 response_data = struct.pack('<1s', cmd.encode('utf-8'))
-                print(f"sending {cmd}")
+                #print(f"sending {cmd}")
                 connection.sendall(response_data)
         except Exception as e:
             print(f"Something went wrong: {e}")
@@ -219,8 +278,8 @@ def main():
             # Clean up the connection
             print("closing connection")
             connection.close()
-        cv.imshow('Shape and Color Detection', frame)
-        cv.waitKey(1)
+        # cv.imshow('Shape and Color Detection', frame)
+        # cv.waitKey(1)
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     main()
