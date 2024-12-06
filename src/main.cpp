@@ -424,7 +424,7 @@ int check(){
   M1_stop();
   M2_stop();
   delay(50);
-  jumpForward(20);
+  jumpForward(10);
   delay(50);
   readADC();
   digitalConvert();
@@ -662,7 +662,7 @@ void followBox() {
   delay(50);
   //rotateClockwise(90);
   //rotateCounterClockwise(90);
-  jumpForward(20);
+  jumpForward(15);
   delay(50);
   rotateCounterClockwise(40);
   delay(50);
@@ -732,17 +732,17 @@ void loop() {
           sendMsg(msg, 9);
           jumpForward(50);
         } else if (cmd == 'r'){
-          jumpForward(30);
+          jumpForward(20);
           delay(50);
           rotateClockwise(50);
         } else if (cmd == 'l'){
-          jumpForward(30);
+          jumpForward(20);
           delay(50);
           rotateCounterClockwise(50);
         } else {
           strcpy(msg, "Rectangle found - s");
           sendMsg(msg, 9);
-          jumpForward(50);
+          jumpForward(20);
         }
 
       }

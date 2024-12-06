@@ -105,7 +105,7 @@ def getRect(frame):
     contours_green, _ = cv.findContours(mask_green, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     if color == "blue":
         for c in contours_blue:
-            if cv.contourArea(c) > 100:  # Filter out small contours
+            if cv.contourArea(c) > 500:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
@@ -119,7 +119,7 @@ def getRect(frame):
                     return 'l'
     elif color == "red":
         for c in contours_red:
-            if cv.contourArea(c) > 100:  # Filter out small contours
+            if cv.contourArea(c) > 500:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
@@ -162,8 +162,8 @@ def getCircle(frame):
     mask_red = cv.inRange(hsv, lower_red, upper_red)
 
     # Green
-    lower_green = np.array([40, 40, 40])
-    upper_green = np.array([80, 255, 255])
+    lower_green = np.array([30, 50, 50])
+    upper_green = np.array([90, 200, 200])
     mask_green = cv.inRange(hsv, lower_green, upper_green)
 
     # Blue
@@ -231,7 +231,7 @@ def detect_shape(c):   # the shape of a contour
 # Main server loop
 #connection, client_address = server_socket.accept()
 def main():
-    cap = cv.VideoCapture(0, cv.CAP_DSHOW)
+    cap = cv.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         exit()

@@ -8,7 +8,7 @@ const char* password = "123456789";
 
 
 // Server IP and port
-const char* host = "172.20.10.3";  // Replace with the IP address of server
+const char* host = "172.20.10.8";  // Replace with the IP address of server
 const uint16_t port = 2024;
 
 // Create a client
