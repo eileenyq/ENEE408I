@@ -8,4 +8,5 @@ struct Data {
 
 void client_setup();
 char client_checkformsgs();
+char client_checkformsgs_blocking();
 void sendMsg(char * msg, char status);

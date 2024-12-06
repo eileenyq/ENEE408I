@@ -234,8 +234,7 @@ def main():
         print(f"redCircleCount: {redCircleCount}")
         print(f"blueCircleCount: {blueCircleCount}")
         print(f"greenCircleCount: {greenCircleCount}")
-        cv.imshow('Shape and Color Detection', frame)
-        cv.waitKey(1)
+
         #Wait for a connection
         try:
             connection, client_address = server_socket.accept()
@@ -278,8 +277,8 @@ def main():
             # Clean up the connection
             print("closing connection")
             connection.close()
-        # cv.imshow('Shape and Color Detection', frame)
-        # cv.waitKey(1)
+        cv.imshow('Shape and Color Detection', frame)
+        cv.waitKey(1)
 
 if __name__ == "__main__":
     main()

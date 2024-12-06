@@ -697,6 +697,7 @@ void loop() {
   float pos = 0;
   mode = 0;
   cornerFlag = 0;
+  int box_count = 0;
 
   while(true) {
     readADC();
@@ -712,7 +713,7 @@ void loop() {
         strcpy(msg, "Gimme Rectangle");
         // sendMsg(msg, 5);
         // char cmd = client_checkformsgs();
-        char cmd; 
+        char cmd;
         for (int i = 0; i < 100; i++){
           sendMsg(msg, 5);
           cmd = client_checkformsgs();
@@ -784,7 +785,33 @@ void loop() {
       rotateClockwise(50);
       delay(50);
       followBox();
-    } else if (lineStatus == 2 || lineStatus == 4 || lineStatus == 8 || lineStatus == 10){
+    } else if (lineStatus == 2){
+      // M1_stop();
+      // M2_stop();
+      // delay(5000);
+      char msg[50];
+      strcpy(msg, "request audio");
+      sendMsg(msg, 4);
+      char cmd = client_checkformsgs_blocking();
+      //should only get x back if there is a connection issue, we should retry in those cases
+      while (cmd == 'x'){
+        sendMsg(msg, 4);
+        cmd = client_checkformsgs_blocking();
+        Serial.println(cmd);
+      }
+      strcpy(msg, "audio request returned");
+      sendMsg(msg, 9);
+      //received command
+      if (cmd == 'r') {
+        delay(5000);
+        rotateClockwise(50);
+        delay(50);
+      } else {
+        delay(5000);
+        rotateCounterClockwise(50);
+        delay(50);
+      }
+    } else if (lineStatus == 4 || lineStatus == 8 || lineStatus == 10){
       if (lineStatus == 10 && cornerFlag == 0){
         mode = 1;
         cornerFlag = 0;

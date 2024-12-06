@@ -8,7 +8,7 @@ const char* password = "123456789";
 
 
 // Server IP and port
-const char* host = "172.20.10.8";  // Replace with the IP address of server
+const char* host = "172.20.10.3";  // Replace with the IP address of server
 const uint16_t port = 2024;
 
 // Create a client
@@ -110,6 +110,33 @@ char client_checkformsgs() {
             return(buffer[0]);
         }
         //delay(5000); // Delay to avoid flooding server
+    }
+    return('x');
+}
+
+char client_checkformsgs_blocking() {
+    // Ensure connection is established with the server
+    if (!client.connected()) {
+        //Serial.println("Disconnected from server. Attempting to reconnect...");
+        // client.stop();
+        if (client.connect(host, port)) {
+            Serial.println("Reconnected to server.");
+        } else {
+            Serial.println("Reconnect failed.");
+            //delay(5000); // Retry delay
+            return('x');
+        }
+    }
+    // Check if connected to the server
+    if (client.connected()) {
+        // Read server's response
+        while (client.available() == 0) {
+            //block
+        }
+        char buffer[1];
+        client.readBytes(buffer, 1); // Read data from server and unpack it
+        Serial.printf("Received response - imageDetected %c\n", buffer[0]);
+        return(buffer[0]);
     }
     return('x');
 }
