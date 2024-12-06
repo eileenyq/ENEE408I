@@ -231,7 +231,7 @@ def detect_shape(c):   # the shape of a contour
 # Main server loop
 #connection, client_address = server_socket.accept()
 def main():
-    cap = cv.VideoCapture(1, cv.CAP_DSHOW)
+    cap = cv.VideoCapture(0, cv.CAP_DSHOW)
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         exit()

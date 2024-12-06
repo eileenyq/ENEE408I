@@ -632,7 +632,7 @@ void followBox() {
       M1_stop();
       M2_stop();
       delay(50);
-      jumpForward(15);
+      jumpForward(7);
       delay(50);
       rotateClockwise(50);
       delay(50);
@@ -662,7 +662,7 @@ void followBox() {
   delay(50);
   //rotateClockwise(90);
   //rotateCounterClockwise(90);
-  jumpForward(30);
+  jumpForward(20);
   delay(50);
   rotateCounterClockwise(40);
   delay(50);
