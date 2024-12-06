@@ -109,6 +109,9 @@ def getRect(frame):
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
+                x, y, w, h = cv.boundingRect(c)
+                cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
+                cv.putText(frame,  f"blue ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 # Detect the shape of the contour
                 if cx >= 300:
                     return 'r'
@@ -120,6 +123,9 @@ def getRect(frame):
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
+                x, y, w, h = cv.boundingRect(c)
+                cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
+                cv.putText(frame,  f"red ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 # Detect the shape of the contour
                 if cx >= 300:
                     return 'r'
@@ -132,6 +138,9 @@ def getRect(frame):
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
                 # Detect the shape of the contour
+                x, y, w, h = cv.boundingRect(c)
+                cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
+                cv.putText(frame,  f"green ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 if cx >= 300:
                     return 'r'
                 else:
