@@ -403,7 +403,7 @@ void jumpBackward(int distance){
 }
 
 bool allBlack(){
-  for (int i = 0; i < 13; i++) {
+  for (int i = 1; i < 12; i++) {
     if (lineArray[i] != 0) {
       return false;
     }
@@ -412,7 +412,7 @@ bool allBlack(){
 }
 
 bool allWhite() {
-  for (int i = 0; i < 13; i++) {
+  for (int i = 1; i < 12; i++) {
     if (lineArray[i] != 1) {
       return false;
     }
@@ -424,7 +424,7 @@ int check(){
   M1_stop();
   M2_stop();
   delay(50);
-  jumpForward(10);
+  jumpForward(25);
   delay(50);
   readADC();
   digitalConvert();
@@ -454,7 +454,7 @@ int isCorner() {
       Serial.println("Plus Shape");
       return 4;
     }
-  } else if (lineArray[6] == 1 && lineArray[7] == 1 && lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
+  } else if (lineArray[7] == 1 && lineArray[8] == 1 && lineArray[9] == 1 && lineArray[10] == 1 && lineArray[11] == 1 && lineArray[12] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Left Corner");
@@ -466,7 +466,7 @@ int isCorner() {
       Serial.println("Left/Straight");
       return 7;
     }
-  } else if (lineArray[6] == 1 && lineArray[5] == 1 && lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1 && lineArray[0] == 1) {
+  } else if (lineArray[6] == 1 && lineArray[5] == 1 && lineArray[4] == 1 && lineArray[3] == 1 && lineArray[2] == 1 && lineArray[1] == 1) {
     c = check();
     if (c == 1){
       Serial.println("Right Corner");
@@ -708,13 +708,13 @@ void loop() {
         jumpForward(3);
         delay(50);
       } else if (mode == 1){
-        jumpBackward(30);
+        jumpBackward(20);
         char msg[50];
         strcpy(msg, "Gimme Rectangle");
-        // sendMsg(msg, 5);
-        // char cmd = client_checkformsgs();
-        char cmd;
-        for (int i = 0; i < 100; i++){
+        sendMsg(msg, 5);
+        char cmd = client_checkformsgs();
+        //char cmd;
+        while (cmd == 'x') {
           sendMsg(msg, 5);
           cmd = client_checkformsgs();
           Serial.println(cmd);
@@ -730,7 +730,7 @@ void loop() {
         if (cmd == 's'){
           strcpy(msg, "Rectangle found - s");
           sendMsg(msg, 9);
-          jumpForward(50);
+          jumpForward(35);
         } else if (cmd == 'r'){
           jumpForward(20);
           delay(50);
@@ -742,7 +742,7 @@ void loop() {
         } else {
           strcpy(msg, "Rectangle found - s");
           sendMsg(msg, 9);
-          jumpForward(20);
+          jumpForward(35);
         }
 
       }
@@ -789,7 +789,7 @@ void loop() {
       sendMsg(msg, 4);
       char cmd = client_checkformsgs_blocking();
       //should only get x back if there is a connection issue, we should retry in those cases
-      while (cmd == 'x'){
+      while (cmd == 'x' || cmd == 'n'){
         sendMsg(msg, 4);
         cmd = client_checkformsgs_blocking();
         Serial.println(cmd);
@@ -808,7 +808,11 @@ void loop() {
       }
     } else if (lineStatus == 4 || lineStatus == 8 || lineStatus == 10){
       if (lineStatus == 10 && cornerFlag == 0){
-        mode = 1;
+        if (mode == 1){
+          mode = 0;
+        } else {
+          mode = 1;
+        }
         cornerFlag = 0;
       }
       if (lineStatus == 8){
@@ -821,7 +825,11 @@ void loop() {
       delay(50);
     } else if (lineStatus == 7 || lineStatus == 5){
       if (lineStatus == 7 && cornerFlag == 0){
-        mode = 1;
+        if (mode == 1){
+          mode = 0;
+        } else {
+          mode = 1;
+        }
         cornerFlag = 0;
       }
       if (lineStatus == 5){

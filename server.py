@@ -68,31 +68,30 @@ def speechRecognition():
         else:
             print("Unrecognized word, defaulting to locate source.")
 
-            return 'x'
+            return 'n'
 
     except sr.UnknownValueError:
         print("Could not understand the audio")
     except sr.RequestError as e:
         print(f"Could not request results from Google Speech ; {e}")
-    return 'x'
+    return 'n'
 
 def getRect(frame):
     color = "blue" if blueCircleCount > redCircleCount and blueCircleCount > greenCircleCount else ("red" if redCircleCount > greenCircleCount else "green")
+    color = "blue"
     print(f"looking for {color}")
     # Convert the frame to HSV color space
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     # color ranges for detection
     # Red color range
-    #lower_red = np.array([0, 120, 70])
-    #lower_red = np.array([0, 100, 100]) #thinks blue is red
-    lower_red = np.array([0, 150, 100]) # i think this works well
-    upper_red = np.array([10, 255, 255])
+    lower_red = np.array([170, 10, 70])
+    upper_red = np.array([180, 100, 255])
     mask_red = cv.inRange(hsv, lower_red, upper_red)
 
     # Green
-    lower_green = np.array([40, 40, 40])
-    upper_green = np.array([80, 255, 255])
+    lower_green = np.array([35, 100, 100])  # Lower bound: Hue 35, Saturation 100, Value 100
+    upper_green = np.array([85, 255, 255]) # Upper bound: Hue 85, Saturation 255, Value 255
     mask_green = cv.inRange(hsv, lower_green, upper_green)
 
     # Blue
@@ -105,7 +104,7 @@ def getRect(frame):
     contours_green, _ = cv.findContours(mask_green, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     if color == "blue":
         for c in contours_blue:
-            if cv.contourArea(c) > 500:  # Filter out small contours
+            if cv.contourArea(c) > 1500:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
@@ -113,13 +112,15 @@ def getRect(frame):
                 cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
                 cv.putText(frame,  f"blue ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 # Detect the shape of the contour
-                if cx >= 300:
+                if cx >= 400:
                     return 'r'
-                else:
+                elif cx <=300:
                     return 'l'
+                else: 
+                    return 's'
     elif color == "red":
         for c in contours_red:
-            if cv.contourArea(c) > 500:  # Filter out small contours
+            if cv.contourArea(c) > 1500:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
@@ -127,25 +128,31 @@ def getRect(frame):
                 cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
                 cv.putText(frame,  f"red ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 # Detect the shape of the contour
-                if cx >= 300:
+                if cx >= 400:
                     return 'r'
-                else:
+                elif cx <=300:
                     return 'l'
+                else: 
+                    return 's'
     elif color == "green":
         for c in contours_green:
-            if cv.contourArea(c) > 100:  # Filter out small contours
+            if cv.contourArea(c) > 1500:  # Filter out small contours
                 M = cv.moments(c)
                 cx = int(M["m10"] / M["m00"])
                 print(f"Centroid: ({cx})")
                 # Detect the shape of the contour
                 x, y, w, h = cv.boundingRect(c)
                 cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
+                cv.imshow('Shape and Color Detection', frame)
+                cv.waitKey(1)
                 cv.putText(frame,  f"green ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-                if cx >= 300:
+                if cx >= 400:
                     return 'r'
-                else:
+                elif cx <=300:
                     return 'l'
-    return 's'
+                else: 
+                    return 's'
+    return 'x'
 
 def getCircle(frame):
     global blueCircleCount
