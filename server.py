@@ -8,10 +8,12 @@ import numpy as np
 blueCircleCount = 0
 redCircleCount = 0
 greenCircleCount = 0
+mysteryCircleCount = 0
 
 blueRectCount = 0
 redRectCount = 0
 greenRectCount = 0
+mysteryRectCount = 0
 # Host IP and port
 HOST = '0.0.0.0'  # Replace with the host IP address
 PORT = 2024       # Arbitrary non-privileged port (>1024)
@@ -77,8 +79,9 @@ def speechRecognition():
     return 'n'
 
 def getRect(frame):
-    color = "blue" if blueCircleCount > redCircleCount and blueCircleCount > greenCircleCount else ("red" if redCircleCount > greenCircleCount else "green")
-    color = "blue"
+    color = "blue" if blueCircleCount > redCircleCount and blueCircleCount > greenCircleCount and blueCircleCount > mysteryCircleCount \
+        else ("red" if redCircleCount > greenCircleCount and redCircleCount > mysteryCircleCount \
+              else ("green" if greenCircleCount > mysteryCircleCount else "mystery"))
     print(f"looking for {color}")
     # Convert the frame to HSV color space
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -116,7 +119,7 @@ def getRect(frame):
                     return 'r'
                 elif cx <=300:
                     return 'l'
-                else: 
+                else:
                     return 's'
     elif color == "red":
         for c in contours_red:
@@ -132,7 +135,7 @@ def getRect(frame):
                     return 'r'
                 elif cx <=300:
                     return 'l'
-                else: 
+                else:
                     return 's'
     elif color == "green":
         for c in contours_green:
@@ -150,8 +153,11 @@ def getRect(frame):
                     return 'r'
                 elif cx <=300:
                     return 'l'
-                else: 
+                else:
                     return 's'
+    else:
+        #TODO: add else case
+        pass
     return 'x'
 
 def getCircle(frame):
@@ -213,7 +219,7 @@ def getCircle(frame):
             if shape == 'circle':
                 greenCircleCount += 1
                 return 'g'
-
+    #TODO: add else case
     return 'x'
 
 def detect_shape(c):   # the shape of a contour
