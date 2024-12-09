@@ -255,7 +255,7 @@ void rotateCounterClockwise(int degrees) {
 
 // Converts ADC readings to binary array lineArray[] (Check threshold for your robot)
 void digitalConvert() {
-  int threshold = 700;
+  int threshold = 670;
   for (int i = 0; i < 7; i++) {
     if (adc1_buf[i]>threshold) {
       lineArray[2*i] = 0;
@@ -270,9 +270,14 @@ void digitalConvert() {
       }
     }
   }
-  for (int i=0; i<13; i++){
+  char msg[50];
+  int i;
+  for (i=0; i<13; i++){
+    msg[i] = lineArray[i] + '0';
     Serial.print(lineArray[i]);
   }
+  msg[i] = '\0'; 
+  //sendMsg(msg, 9);
   Serial.println();
 }
 // Calculate robot's position on the line
@@ -394,7 +399,7 @@ void jumpBackward(int distance){
     u = kp*angleZ + kd*diff+ ki*total;
     lastAngle = angleZ;
     rightWheelPWM = 95 - u;
-    leftWheelPWM = 95 + u;
+    leftWheelPWM = 115 + u;
     M1_backward(rightWheelPWM);
     M2_backward(leftWheelPWM);
   }
@@ -417,6 +422,7 @@ bool allWhite() {
       return false;
     }
   }
+
   return true;
 }
 
@@ -765,81 +771,161 @@ void loop() {
     Serial.print("CheckingCorner");
     if (lineStatus == 3){
       // check for circle color
-      char msg[50];
-      strcpy(msg, "Gimme Circle");
-      sendMsg(msg, 3);
-      char cmd = client_checkformsgs();
-      while (cmd == 'x'){
+      if (mode == 0){
+        char msg[50];
+        strcpy(msg, "Gimme Circle");
         sendMsg(msg, 3);
-        cmd = client_checkformsgs();
-        Serial.println(cmd);
+        char cmd = client_checkformsgs();
+        while (cmd == 'x'){
+          sendMsg(msg, 3);
+          cmd = client_checkformsgs();
+          Serial.println(cmd);
+        }
+        strcpy(msg, "circle found");
+        sendMsg(msg, 9);
       }
-      strcpy(msg, "circle found");
-      sendMsg(msg, 9);
       delay(5000);
       rotateClockwise(50);
       delay(50);
       followBox();
     } else if (lineStatus == 2){
-      // M1_stop();
-      // M2_stop();
-      // delay(5000);
-      char msg[50];
-      strcpy(msg, "request audio");
-      sendMsg(msg, 4);
-      char cmd = client_checkformsgs_blocking();
-      //should only get x back if there is a connection issue, we should retry in those cases
-      while (cmd == 'x' || cmd == 'n'){
+      if (mode == 0){
+        // M1_stop();
+        // M2_stop();
+        // delay(5000);
+        char msg[50];
+        strcpy(msg, "request audio");
         sendMsg(msg, 4);
-        cmd = client_checkformsgs_blocking();
-        Serial.println(cmd);
-      }
-      strcpy(msg, "audio request returned");
-      sendMsg(msg, 9);
-      //received command
-      if (cmd == 'r') {
-        delay(5000);
-        rotateClockwise(50);
-        delay(50);
+        char cmd = client_checkformsgs_blocking();
+        //should only get x back if there is a connection issue, we should retry in those cases
+        while (cmd == 'x' || cmd == 'n'){
+          sendMsg(msg, 4);
+          cmd = client_checkformsgs_blocking();
+          Serial.println(cmd);
+        }
+        strcpy(msg, "audio request returned");
+        sendMsg(msg, 9);
+        //received command
+        if (cmd == 'r') {
+          delay(5000);
+          rotateClockwise(50);
+          delay(50);
+        } else {
+          delay(5000);
+          rotateCounterClockwise(50);
+          delay(50);
+        }
       } else {
-        delay(5000);
+        delay(50);
         rotateCounterClockwise(50);
         delay(50);
       }
     } else if (lineStatus == 4 || lineStatus == 8 || lineStatus == 10){
       if (lineStatus == 10 && cornerFlag == 0){
-        if (mode == 1){
-          mode = 0;
-        } else {
-          mode = 1;
+        mode = 1;
+        cornerFlag = 0;
+        jumpBackward(18);
+        delay(50);
+        rotateCounterClockwise(3);
+        delay(50);
+        char msg[50];
+        strcpy(msg, "Gimme Rectangle");
+        sendMsg(msg, 5);
+        char cmd = client_checkformsgs();
+        //char cmd;
+        while (cmd == 'x') {
+          sendMsg(msg, 5);
+          cmd = client_checkformsgs();
+          Serial.println(cmd);
+          if (cmd == 'l'||cmd == 'r'){
+            strcpy(msg, "Rectangle found on left or right");
+            sendMsg(msg, 9);
+            break;
+          }
         }
-        cornerFlag = 0;
-      }
-      if (lineStatus == 8){
-        cornerFlag = 1;
+        strcpy(msg, "Rectangle found");
+        sendMsg(msg, 9);
+        delay(5000);
+        if (cmd == 's'){
+          strcpy(msg, "Rectangle found - s");
+          sendMsg(msg, 9);
+          jumpForward(50);
+        } else if (cmd == 'r'){
+          jumpForward(35);
+          delay(50);
+          rotateClockwise(50);
+        } else if (cmd == 'l'){
+          jumpForward(35);
+          delay(50);
+          rotateCounterClockwise(50);
+        } else {
+          strcpy(msg, "Rectangle found - s");
+          sendMsg(msg, 9);
+          jumpForward(50);
+        }
       } else {
-        cornerFlag = 0;
+        if (lineStatus == 8){
+          cornerFlag = 1;
+        } else {
+          cornerFlag = 0;
+        }
+        delay(50);
+        rotateClockwise(50);
+        delay(50);
       }
-      delay(50);
-      rotateClockwise(50);
-      delay(50);
     } else if (lineStatus == 7 || lineStatus == 5){
       if (lineStatus == 7 && cornerFlag == 0){
-        if (mode == 1){
-          mode = 0;
-        } else {
-          mode = 1;
+        mode = 1;
+        cornerFlag = 0;
+        jumpBackward(18);
+        delay(50);
+        rotateCounterClockwise(3);
+        delay(50);
+        char msg[50];
+        strcpy(msg, "Gimme Rectangle");
+        sendMsg(msg, 5);
+        char cmd = client_checkformsgs();
+        //char cmd;
+        while (cmd == 'x') {
+          sendMsg(msg, 5);
+          cmd = client_checkformsgs();
+          Serial.println(cmd);
+          if (cmd == 'l'||cmd == 'r'){
+            strcpy(msg, "Rectangle found on left or right");
+            sendMsg(msg, 9);
+            break;
+          }
         }
-        cornerFlag = 0;
-      }
-      if (lineStatus == 5){
-        cornerFlag = 1;
+        strcpy(msg, "Rectangle found");
+        sendMsg(msg, 9);
+        delay(5000);
+        if (cmd == 's'){
+          strcpy(msg, "Rectangle found - s");
+          sendMsg(msg, 9);
+          jumpForward(50);
+        } else if (cmd == 'r'){
+          jumpForward(35);
+          delay(50);
+          rotateClockwise(50);
+        } else if (cmd == 'l'){
+          jumpForward(35);
+          delay(50);
+          rotateCounterClockwise(50);
+        } else {
+          strcpy(msg, "Rectangle found - s");
+          sendMsg(msg, 9);
+          jumpForward(50);
+        }
       } else {
-        cornerFlag = 0;
+        if (lineStatus == 5){
+          cornerFlag = 1;
+        } else {
+          cornerFlag = 0;
+        }
+        delay(50);
+        rotateCounterClockwise(40);
+        delay(50);
       }
-      delay(50);
-      rotateCounterClockwise(40);
-      delay(50);
     } else {
       pos = getPosition();
       if (basePWM - u  < 0|| basePWM + u > 255 || basePWM + u < 0 || basePWM - u > 255) {

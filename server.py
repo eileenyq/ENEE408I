@@ -83,6 +83,7 @@ def getRect(frame):
         else ("red" if redCircleCount > greenCircleCount and redCircleCount > mysteryCircleCount \
               else ("green" if greenCircleCount > mysteryCircleCount else "mystery"))
     print(f"looking for {color}")
+    color = "blue"
     # Convert the frame to HSV color space
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
@@ -102,9 +103,27 @@ def getRect(frame):
     upper_blue = np.array([130, 255, 255])
     mask_blue = cv.inRange(hsv, lower_blue, upper_blue)
 
+    # Orange
+    lower_orange = np.array([10, 100, 100])
+    upper_orange = np.array([25, 255, 255])
+    mask_orange = cv.inRange(hsv, lower_orange, upper_orange)
+
+    # yellow
+    lower_yellow = np.array([25, 100, 100])
+    upper_yellow = np.array([35, 255, 255])
+    mask_yellow = cv.inRange(hsv, lower_yellow, upper_yellow)
+
+    # purple
+    lower_purple = np.array([130, 100, 100])
+    upper_purple = np.array([160, 255, 255])
+    mask_purple = cv.inRange(hsv, lower_purple, upper_purple)
+
     contours_red, _ = cv.findContours(mask_red, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     contours_blue, _ = cv.findContours(mask_blue, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     contours_green, _ = cv.findContours(mask_green, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_orange, _ = cv.findContours(mask_orange, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_yellow, _ = cv.findContours(mask_yellow, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_purple, _ = cv.findContours(mask_purple, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     if color == "blue":
         for c in contours_blue:
             if cv.contourArea(c) > 1500:  # Filter out small contours
@@ -155,9 +174,58 @@ def getRect(frame):
                     return 'l'
                 else:
                     return 's'
-    else:
-        #TODO: add else case
-        pass
+    elif color == "mystery":
+        for c in contours_orange:
+            if cv.contourArea(c) > 1500:  # Filter out small contours
+                M = cv.moments(c)
+                cx = int(M["m10"] / M["m00"])
+                print(f"Centroid: ({cx})")
+                # Detect the shape of the contour
+                x, y, w, h = cv.boundingRect(c)
+                cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
+                cv.imshow('Shape and Color Detection', frame)
+                cv.waitKey(1)
+                cv.putText(frame,  f"orange ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                if cx >= 400:
+                    return 'r'
+                elif cx <=300:
+                    return 'l'
+                else:
+                    return 's'
+        for c in contours_yellow:
+            if cv.contourArea(c) > 1500:  # Filter out small contours
+                M = cv.moments(c)
+                cx = int(M["m10"] / M["m00"])
+                print(f"Centroid: ({cx})")
+                # Detect the shape of the contour
+                x, y, w, h = cv.boundingRect(c)
+                cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
+                cv.imshow('Shape and Color Detection', frame)
+                cv.waitKey(1)
+                cv.putText(frame,  f"yellow ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                if cx >= 400:
+                    return 'r'
+                elif cx <=300:
+                    return 'l'
+                else:
+                    return 's'
+        for c in contours_purple:
+            if cv.contourArea(c) > 1500:  # Filter out small contours
+                M = cv.moments(c)
+                cx = int(M["m10"] / M["m00"])
+                print(f"Centroid: ({cx})")
+                # Detect the shape of the contour
+                x, y, w, h = cv.boundingRect(c)
+                cv.drawContours(frame, [c], -1, (255, 255, 255), 2)
+                cv.imshow('Shape and Color Detection', frame)
+                cv.waitKey(1)
+                cv.putText(frame,  f"purple ", (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                if cx >= 400:
+                    return 'r'
+                elif cx <=300:
+                    return 'l'
+                else:
+                    return 's'    
     return 'x'
 
 def getCircle(frame):
@@ -184,9 +252,27 @@ def getCircle(frame):
     upper_blue = np.array([130, 255, 255])
     mask_blue = cv.inRange(hsv, lower_blue, upper_blue)
 
+     # Orange
+    lower_orange = np.array([10, 100, 100])
+    upper_orange = np.array([25, 255, 255])
+    mask_orange = cv.inRange(hsv, lower_orange, upper_orange)
+
+    # yellow
+    lower_yellow = np.array([25, 100, 100])
+    upper_yellow = np.array([35, 255, 255])
+    mask_yellow = cv.inRange(hsv, lower_yellow, upper_yellow)
+
+    # purple
+    lower_purple = np.array([130, 100, 100])
+    upper_purple = np.array([160, 255, 255])
+    mask_purple = cv.inRange(hsv, lower_purple, upper_purple)
+
     contours_red, _ = cv.findContours(mask_red, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     contours_blue, _ = cv.findContours(mask_blue, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     contours_green, _ = cv.findContours(mask_green, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_orange, _ = cv.findContours(mask_orange, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_yellow, _ = cv.findContours(mask_yellow, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours_purple, _ = cv.findContours(mask_purple, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     for c in contours_red:
         if cv.contourArea(c) > 2000:  # Filter out small contours
             M = cv.moments(c)
@@ -219,7 +305,36 @@ def getCircle(frame):
             if shape == 'circle':
                 greenCircleCount += 1
                 return 'g'
-    #TODO: add else case
+    for c in contours_orange:
+        if cv.contourArea(c) > 2000:  # Filter out small contours
+            M = cv.moments(c)
+            cx = int(M["m10"] / M["m00"])
+            print(f"Centroid: ({cx})")
+            # Detect the shape of the contour
+            shape = detect_shape(c)
+            if shape == 'circle':
+                mysteryCircleCount += 1
+                return 'r'
+    for c in contours_yellow:
+        if cv.contourArea(c) > 2000:  # Filter out small contours
+            M = cv.moments(c)
+            cx = int(M["m10"] / M["m00"])
+            print(f"Centroid: ({cx})")
+            # Detect the shape of the contour
+            shape = detect_shape(c)
+            if shape == 'circle':
+                mysteryCircleCount += 1
+                return 'r'
+    for c in contours_purple:
+        if cv.contourArea(c) > 2000:  # Filter out small contours
+            M = cv.moments(c)
+            cx = int(M["m10"] / M["m00"])
+            print(f"Centroid: ({cx})")
+            # Detect the shape of the contour
+            shape = detect_shape(c)
+            if shape == 'circle':
+                mysteryCircleCount += 1
+                return 'r'
     return 'x'
 
 def detect_shape(c):   # the shape of a contour
@@ -253,9 +368,6 @@ def main():
         if not ret:
             print("Error: Failed to capture image")
             break
-        print(f"redCircleCount: {redCircleCount}")
-        print(f"blueCircleCount: {blueCircleCount}")
-        print(f"greenCircleCount: {greenCircleCount}")
 
         #Wait for a connection
         try:
